@@ -1,4 +1,3 @@
-
 #ToopherDotNet
 
 #### Introduction
@@ -9,7 +8,7 @@ Make sure you visit (http://dev.toopher.com) to get acquainted with the Toopher 
 
 #### OAuth Authentication
 
-The first step to accessing the Twitter API is to sign up for an account at the development portal (http://dev.toopher.com) and set up a requester. When that process is complete, your requester is issued a Consumer Key and Consumer Secret. These tokens are responsible for identifying your requester when Toopher interacts with your customers. Once you have these values, you can create a new service and pass them in.
+The first step to accessing the Toopher API is to sign up for an account at the development portal (http://dev.toopher.com) and set up a requester. When that process is complete, your requester is issued a Consumer Key and Consumer Secret. These tokens are responsible for identifying your requester when Toopher interacts with your customers. Once you have these values, you can create a new service and pass them in.
 
 #### The Toopher Two-Step
 Interacting with the Toopher web service involves two steps: pairing, and authenticating.
