@@ -27,8 +27,7 @@ namespace Toopher
 			this.consumerSecret = consumerSecret;
 			if (baseUrl != null) {
 				this.baseUrl = baseUrl;
-			}
-			else {
+			} else {
 				this.baseUrl = ToopherAPI.DEFAULT_BASE_URL;
 			}
 		}
@@ -131,12 +130,10 @@ namespace Toopher
 				if (method.Equals ("POST")) {
 					var responseArray = wClient.UploadValues (client.RequestUrl, client.Method, parameters);
 					response = Encoding.UTF8.GetString (responseArray);
-				}
-				else {
+				} else {
 					response = wClient.DownloadString (client.RequestUrl);
 				}
-			}
-			catch (WebException wex) {
+			} catch (WebException wex) {
 				string error_message;
 				using (Stream stream = wex.Response.GetResponseStream ()) {
 					StreamReader reader = new StreamReader (stream, Encoding.UTF8);
@@ -147,16 +144,14 @@ namespace Toopher
 					// Attempt to parse JSON response
 					var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
 					error_message = (string)json["error_message"];
-				}
-				catch (Exception) { /* Ignore */ }
+				} catch (Exception) { /* Ignore */ }
 
 				throw new RequestError (error_message, wex);
 			}
 
 			try {
 				return (JsonObject)SimpleJson.SimpleJson.DeserializeObject (response);
-			}
-			catch (Exception ex) {
+			} catch (Exception ex) {
 				throw new RequestError ("Could not parse response", ex);
 			}
 		}
@@ -177,7 +172,8 @@ namespace Toopher
 	{
 		private IDictionary<string, Object> _dict;
 
-		public object this[string key] {
+		public object this[string key]
+		{
 			get
 			{
 				return _dict[key];
@@ -219,12 +215,11 @@ namespace Toopher
 				var user = (JsonObject)_dict["user"];
 				this.userId = (string)user["id"];
 				this.userName = (string)user["name"];
-			}
-			catch (Exception ex) {
+			} catch (Exception ex) {
 				throw new RequestError ("Could not parse pairing status from response", ex);
 			}
 		}
-		
+
 	}
 
 	// Status information for an authentication request
@@ -238,7 +233,7 @@ namespace Toopher
 				return _dict[key];
 			}
 		}
-		
+
 		public string id
 		{
 			get;
@@ -294,8 +289,7 @@ namespace Toopher
 				var terminal = (JsonObject)_dict["terminal"];
 				this.terminalId = (string)terminal["id"];
 				terminalName = (string)terminal["name"];
-			}
-			catch (Exception ex) {
+			} catch (Exception ex) {
 				throw new RequestError ("Could not parse authentication status from response", ex);
 			}
 		}

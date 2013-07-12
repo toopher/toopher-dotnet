@@ -44,8 +44,7 @@ namespace Toopher
 
 					if (pairingPhrase.Length == 0) {
 						Console.WriteLine ("Please enter a pairing phrase to continue");
-					}
-					else {
+					} else {
 						break;
 					}
 				}
@@ -62,8 +61,7 @@ namespace Toopher
 					var pairingStatus = api.Pair (pairingPhrase, userName);
 					pairingId = pairingStatus.id;
 					break;
-				}
-				catch (RequestError err) {
+				} catch (RequestError err) {
 					System.Console.WriteLine (String.Format ("The pairing phrase was not accepted (reason:{0})", err.Message));
 				}
 			}
@@ -78,12 +76,10 @@ namespace Toopher
 					if (pairingStatus.enabled) {
 						Console.WriteLine ("Pairing complete");
 						break;
-					}
-					else {
+					} else {
 						Console.WriteLine ("The pairing has not been authorized by the phone yet.");
 					}
-				}
-				catch (RequestError err) {
+				} catch (RequestError err) {
 					Console.WriteLine (String.Format ("Could not check pairing status (reason:{0})", err.Message));
 				}
 			}
@@ -103,8 +99,7 @@ namespace Toopher
 				try {
 					var requestStatus = api.Authenticate (pairingId, terminalName);
 					requestId = requestStatus.id;
-				}
-				catch (RequestError err) {
+				} catch (RequestError err) {
 					Console.WriteLine (String.Format ("Error initiating authentication (reason:{0})", err.Message));
 					continue;
 				}
@@ -117,16 +112,14 @@ namespace Toopher
 					AuthenticationStatus requestStatus;
 					try {
 						requestStatus = api.GetAuthenticationStatus (requestId);
-					}
-					catch (RequestError err) {
+					} catch (RequestError err) {
 						Console.WriteLine (String.Format ("Could not check authentication status (reason:{0})", err.Message));
 						continue;
 					}
 
 					if (requestStatus.pending) {
 						Console.WriteLine ("The authentication request has not received a response from the phone yet.");
-					}
-					else {
+					} else {
 						string automation = requestStatus.automated ? "automatically " : "";
 						string result = requestStatus.granted ? "granted" : "denied";
 						Console.WriteLine ("The request was " + automation + result + "!");
