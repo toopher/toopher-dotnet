@@ -51,9 +51,8 @@ namespace Toopher
 				}
 			}
 
-
 			var json = post (endpoint, parameters);
-			return PairingStatus.fromJson (json);
+			return new PairingStatus (json);
 		}
 
 		// Check on status of a pairing request
@@ -64,7 +63,7 @@ namespace Toopher
 			string endpoint = String.Format ("pairings/{0}", pairingRequestId);
 
 			var json = get (endpoint);
-			return PairingStatus.fromJson (json);
+			return new PairingStatus (json);
 		}
 
 		// Authenticate an action with Toopher
@@ -88,7 +87,7 @@ namespace Toopher
 			}
 
 			var json = post (endpoint, parameters);
-			return AuthenticationStatus.fromJson (json);
+			return new AuthenticationStatus (json);
 		}
 
 		// Check on status of authentication request
@@ -100,7 +99,7 @@ namespace Toopher
 			string endpoint = String.Format ("authentication_requests/{0}", authenticationRequestId);
 
 			var json = get (endpoint);
-			return AuthenticationStatus.fromJson (json);
+			return new AuthenticationStatus (json);
 		}
 
 		private JsonObject request (string method, string endpoint, NameValueCollection parameters = null)
@@ -174,23 +173,36 @@ namespace Toopher
 	}
 
 	// Status information for a pairing request
-	public class PairingStatus : Dictionary<String, Object>
+	public class PairingStatus
 	{
+		private IDictionary<string, Object> _dict;
+
+		public object this[string key] {
+			get
+			{
+				return _dict[key];
+			}
+		}
+
 		public string id
 		{
-			get { return (string)this["id"]; }
+			get;
+			private set;
 		}
 		public string userId
 		{
-			get { return (string)((JsonObject)this["user"])["id"]; }
+			get;
+			private set;
 		}
 		public string userName
 		{
-			get { return (string)((JsonObject)this["user"])["name"]; }
+			get;
+			private set;
 		}
 		public bool enabled
 		{
-			get { return (bool)this["enabled"]; }
+			get;
+			private set;
 		}
 
 		public override string ToString ()
@@ -198,60 +210,69 @@ namespace Toopher
 			return string.Format ("[PairingStatus: id={0}; userId={1}; userName={2}, enabled={3}]", id, userId, userName, enabled);
 		}
 
-		public static PairingStatus fromJson (JsonObject json)
+		public PairingStatus (IDictionary<string, object> _dict)
 		{
 			try {
-				// validate that the json has the minimum keys we need
-				var id = (string)json["id"];
-				var enabled = (bool)json["enabled"];
-				var user = (JsonObject)json["user"];
-				var userId = (string)user["id"];
-				var userName = (string)user["name"];
-
-				// construct and return the result
-				PairingStatus result = new PairingStatus ();
-				foreach (KeyValuePair<String, Object> kvp in json) {
-					result.Add (kvp.Key, kvp.Value);
-				}
-				return result;
+				this._dict = _dict;
+				this.id = (string)_dict["id"];
+				this.enabled = (bool)_dict["enabled"];
+				var user = (JsonObject)_dict["user"];
+				this.userId = (string)user["id"];
+				this.userName = (string)user["name"];
 			}
 			catch (Exception ex) {
 				throw new RequestError ("Could not parse pairing status from response", ex);
 			}
 		}
+		
 	}
 
 	// Status information for an authentication request
-	public class AuthenticationStatus : Dictionary<String, Object>
+	public class AuthenticationStatus
 	{
-		// convenience property accessors
+		private IDictionary<string, object> _dict;
+		public object this[string key]
+		{
+			get
+			{
+				return _dict[key];
+			}
+		}
+		
 		public string id
 		{
-			get { return (string)this["id"]; }
+			get;
+			private set;
 		}
 		public bool pending
 		{
-			get { return (bool)this["pending"]; }
+			get;
+			private set;
 		}
 		public bool granted
 		{
-			get { return (bool)this["granted"]; }
+			get;
+			private set;
 		}
 		public bool automated
 		{
-			get { return (bool)this["automated"]; }
+			get;
+			private set;
 		}
 		public string reason
 		{
-			get { return (string)this["reason"]; }
+			get;
+			private set;
 		}
 		public string terminalId
 		{
-			get { return (string)((JsonObject)this["terminal"])["id"]; }
+			get;
+			private set;
 		}
 		public string terminalName
 		{
-			get { return (string)((JsonObject)this["terminal"])["name"]; }
+			get;
+			private set;
 		}
 
 		public override string ToString ()
@@ -259,27 +280,20 @@ namespace Toopher
 			return string.Format ("[AuthenticationStatus: id={0}; pending={1}; granted={2}; automated={3}; reason={4}; terminalId={5}; terminalName={6}]", id, pending, granted, automated, reason, terminalId, terminalName);
 		}
 
-		public static AuthenticationStatus fromJson (JsonObject json)
+		public AuthenticationStatus (IDictionary<string, object> _dict)
 		{
+			this._dict = _dict;
 			try {
 				// validate that the json has the minimum keys we need
-				var id = (string)json["id"];
-				var pending = (bool)json["pending"];
-				var granted = (bool)json["granted"];
-				var automated = (bool)json["automated"];
-				var reason = (string)json["reason"];
+				this.id = (string)_dict["id"];
+				this.pending = (bool)_dict["pending"];
+				this.granted = (bool)_dict["granted"];
+				this.automated = (bool)_dict["automated"];
+				this.reason = (string)_dict["reason"];
 
-				var terminal = (JsonObject)json["terminal"];
-				var terminalId = (string)terminal["id"];
-				var terminalName = (string)terminal["name"];
-
-				// construct and return the result
-				AuthenticationStatus result = new AuthenticationStatus ();
-				foreach (KeyValuePair<String, Object> kvp in json) {
-					result.Add (kvp.Key, kvp.Value);
-				}
-				return result;
-
+				var terminal = (JsonObject)_dict["terminal"];
+				this.terminalId = (string)terminal["id"];
+				terminalName = (string)terminal["name"];
 			}
 			catch (Exception ex) {
 				throw new RequestError ("Could not parse authentication status from response", ex);
