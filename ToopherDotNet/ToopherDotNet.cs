@@ -21,7 +21,7 @@ namespace Toopher
 		// Create the ToopherAPI object tied to your requester credentials
 		// 
 		// Credentials are available on https://dev.toopher.com
-		public ToopherAPI(string consumerKey, string consumerSecret, string baseUrl = null)
+		public ToopherAPI (string consumerKey, string consumerSecret, string baseUrl = null)
 		{
 			this.consumerKey = consumerKey;
 			this.consumerSecret = consumerSecret;
@@ -37,7 +37,7 @@ namespace Toopher
 		//
 		// Must provide a pairing request (generated on their phone) and
 		// the user's name
-		public PairingStatus Pair(string pairingPhrase, string userName, Dictionary<string, string> extras = null)
+		public PairingStatus Pair (string pairingPhrase, string userName, Dictionary<string, string> extras = null)
 		{
 			string endpoint = "pairings/create";
 
@@ -59,7 +59,7 @@ namespace Toopher
 		// Check on status of a pairing request
 		// 
 		// Must provide the ID returned when the pairing request was initiated
-		public PairingStatus GetPairingStatus(string pairingRequestId)
+		public PairingStatus GetPairingStatus (string pairingRequestId)
 		{
 			string endpoint = String.Format ("pairings/{0}", pairingRequestId);
 
@@ -71,7 +71,7 @@ namespace Toopher
 		//
 		// Provide pairing ID, a name for the terminal (displayed to user) and
 		// an option action name (displayed to user) [defaults to "log in"]
-		public AuthenticationStatus Authenticate(string pairingId, string terminalName, string actionName = null, Dictionary<string, string> extras = null)
+		public AuthenticationStatus Authenticate (string pairingId, string terminalName, string actionName = null, Dictionary<string, string> extras = null)
 		{
 			string endpoint = "authentication_requests/initiate";
 
@@ -95,7 +95,7 @@ namespace Toopher
 		//
 		// Provide authentication request ID returned when authentication request was
 		// started.
-		public AuthenticationStatus GetAuthenticationStatus(string authenticationRequestId)
+		public AuthenticationStatus GetAuthenticationStatus (string authenticationRequestId)
 		{
 			string endpoint = String.Format ("authentication_requests/{0}", authenticationRequestId);
 
@@ -103,7 +103,7 @@ namespace Toopher
 			return AuthenticationStatus.fromJson (json);
 		}
 
-		private JsonObject request(string method, string endpoint, NameValueCollection parameters = null)
+		private JsonObject request (string method, string endpoint, NameValueCollection parameters = null)
 		{
 			// Normalize method string
 			method = method.ToUpper ();
@@ -162,12 +162,12 @@ namespace Toopher
 			}
 		}
 
-		private JsonObject get(string endpoint, NameValueCollection parameters = null)
+		private JsonObject get (string endpoint, NameValueCollection parameters = null)
 		{
 			return request ("GET", endpoint, parameters);
 		}
 
-		private JsonObject post(string endpoint, NameValueCollection parameters = null)
+		private JsonObject post (string endpoint, NameValueCollection parameters = null)
 		{
 			return request ("POST", endpoint, parameters);
 		}
@@ -193,12 +193,12 @@ namespace Toopher
 			get { return (bool)this["enabled"]; }
 		}
 
-		public override string ToString()
+		public override string ToString ()
 		{
 			return string.Format ("[PairingStatus: id={0}; userId={1}; userName={2}, enabled={3}]", id, userId, userName, enabled);
 		}
 
-		public static PairingStatus fromJson(JsonObject json)
+		public static PairingStatus fromJson (JsonObject json)
 		{
 			try {
 				// validate that the json has the minimum keys we need
@@ -254,12 +254,12 @@ namespace Toopher
 			get { return (string)((JsonObject)this["terminal"])["name"]; }
 		}
 
-		public override string ToString()
+		public override string ToString ()
 		{
 			return string.Format ("[AuthenticationStatus: id={0}; pending={1}; granted={2}; automated={3}; reason={4}; terminalId={5}; terminalName={6}]", id, pending, granted, automated, reason, terminalId, terminalName);
 		}
 
-		public static AuthenticationStatus fromJson(JsonObject json)
+		public static AuthenticationStatus fromJson (JsonObject json)
 		{
 			try {
 				// validate that the json has the minimum keys we need
@@ -290,8 +290,8 @@ namespace Toopher
 	// An exception class used to indicate an error in a request
 	public class RequestError : System.ApplicationException
 	{
-		public RequestError(string message) : base (message) { }
-		public RequestError(string message, System.Exception inner) : base (message, inner) { }
+		public RequestError (string message) : base (message) { }
+		public RequestError (string message, System.Exception inner) : base (message, inner) { }
 	}
 
 }

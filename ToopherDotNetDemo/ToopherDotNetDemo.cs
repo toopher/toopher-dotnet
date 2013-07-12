@@ -10,7 +10,7 @@ namespace Toopher
 
 		public static ToopherAPI api;
 
-		public static void Main(string[] args)
+		public static void Main (string[] args)
 		{
 			Console.WriteLine ("======================================");
 			Console.WriteLine ("Library Usage Demo");
