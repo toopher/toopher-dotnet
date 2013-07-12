@@ -18,13 +18,20 @@ namespace Toopher
 			Console.WriteLine ("");
 			Console.WriteLine ("Setup Credentials");
 			Console.WriteLine ("--------------------------------------");
-			Console.WriteLine ("Enter your requester credentials (from https://dev.toopher.com)");
-			Console.Write ("Consumer key: "); 
-			string consumerKey = Console.ReadLine ();
-			Console.Write ("Consumer secret: ");
-			string consumerSecret = Console.ReadLine ();
-
-			api = new Toopher.ToopherAPI (consumerKey, consumerSecret);
+            string consumerKey = System.Environment.GetEnvironmentVariable("TOOPHER_CONSUMER_KEY");
+            string consumerSecret = System.Environment.GetEnvironmentVariable("TOOPHER_CONSUMER_SECRET");
+            if ((consumerKey == null) || (consumerSecret == null))
+            {
+                Console.WriteLine("Enter your requester credentials (from https://dev.toopher.com).");
+                Console.WriteLine("Hint: set the TOOPHER_CONSUMER_SECRET and TOOPHER_CONSUMER_SECRET environment variables to avoid this prompt.");
+                Console.Write("Consumer key: ");
+                consumerKey = Console.ReadLine();
+                Console.Write("Consumer secret: ");
+                consumerSecret = Console.ReadLine();
+            }
+            string baseUrl = System.Environment.GetEnvironmentVariable("TOOPHER_BASE_URL");
+			
+			api = new Toopher.ToopherAPI (consumerKey, consumerSecret, baseUrl);
 
 			string pairingId;
 			while (true) {
@@ -117,6 +124,7 @@ namespace Toopher
 						string automation = requestStatus.automated ? "automatically " : "";
 						string result = requestStatus.granted ? "granted" : "denied";
 						Console.WriteLine ("The request was " + automation + result + "!");
+                        Console.WriteLine("This request " + ((bool)requestStatus["totp_valid"] ? "had" : "DID NOT HAVE") + " a valid authenticator OTP.");
 						break;
 					}
 				}
