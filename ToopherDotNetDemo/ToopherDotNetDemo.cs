@@ -18,13 +18,19 @@ namespace Toopher
 			Console.WriteLine ("");
 			Console.WriteLine ("Setup Credentials");
 			Console.WriteLine ("--------------------------------------");
-			Console.WriteLine ("Enter your requester credentials (from https://dev.toopher.com)");
-			Console.Write ("Consumer key: "); 
-			string consumerKey = Console.ReadLine ();
-			Console.Write ("Consumer secret: ");
-			string consumerSecret = Console.ReadLine ();
+			string consumerKey = System.Environment.GetEnvironmentVariable ("TOOPHER_CONSUMER_KEY");
+			string consumerSecret = System.Environment.GetEnvironmentVariable ("TOOPHER_CONSUMER_SECRET");
+			if ((consumerKey == null) || (consumerSecret == null)) {
+				Console.WriteLine ("Enter your requester credentials (from https://dev.toopher.com).");
+				Console.WriteLine ("Hint: set the TOOPHER_CONSUMER_SECRET and TOOPHER_CONSUMER_SECRET environment variables to avoid this prompt.");
+				Console.Write ("Consumer key: ");
+				consumerKey = Console.ReadLine ();
+				Console.Write ("Consumer secret: ");
+				consumerSecret = Console.ReadLine ();
+			}
+			string baseUrl = System.Environment.GetEnvironmentVariable ("TOOPHER_BASE_URL");
 
-			api = new Toopher.ToopherAPI (consumerKey, consumerSecret);
+			api = new Toopher.ToopherAPI (consumerKey, consumerSecret, baseUrl);
 
 			string pairingId;
 			while (true) {
@@ -74,7 +80,7 @@ namespace Toopher
 						Console.WriteLine ("The pairing has not been authorized by the phone yet.");
 					}
 				} catch (RequestError err) {
-					Console.WriteLine (String.Format("Could not check pairing status (reason:{0})", err.Message));
+					Console.WriteLine (String.Format ("Could not check pairing status (reason:{0})", err.Message));
 				}
 			}
 
@@ -94,7 +100,7 @@ namespace Toopher
 					var requestStatus = api.Authenticate (pairingId, terminalName);
 					requestId = requestStatus.id;
 				} catch (RequestError err) {
-					Console.WriteLine(String.Format("Error initiating authentication (reason:{0})", err.Message));
+					Console.WriteLine (String.Format ("Error initiating authentication (reason:{0})", err.Message));
 					continue;
 				}
 
@@ -107,7 +113,7 @@ namespace Toopher
 					try {
 						requestStatus = api.GetAuthenticationStatus (requestId);
 					} catch (RequestError err) {
-						Console.WriteLine (String.Format("Could not check authentication status (reason:{0})", err.Message));
+						Console.WriteLine (String.Format ("Could not check authentication status (reason:{0})", err.Message));
 						continue;
 					}
 
@@ -117,12 +123,13 @@ namespace Toopher
 						string automation = requestStatus.automated ? "automatically " : "";
 						string result = requestStatus.granted ? "granted" : "denied";
 						Console.WriteLine ("The request was " + automation + result + "!");
+						Console.WriteLine ("This request " + ((bool)requestStatus["totp_valid"] ? "had" : "DID NOT HAVE") + " a valid authenticator OTP.");
 						break;
 					}
 				}
 
-				Console.WriteLine("Press return to authenticate again, or Ctrl-C to exit");
-				Console.ReadLine();
+				Console.WriteLine ("Press return to authenticate again, or Ctrl-C to exit");
+				Console.ReadLine ();
 			}
 		}
 	}
