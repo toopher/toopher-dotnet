@@ -5,12 +5,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToopherDotNet", "ToopherDot
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToopherDotNetDemo", "ToopherDotNetDemo\ToopherDotNetDemo.csproj", "{58138006-E137-4F22-9DC5-73037AA75F17}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToopherDotNetTests", "ToopherDotNetTests\ToopherDotNetTests.csproj", "{2A6A10D9-E321-4DF6-AF79-9D5F4AF7F747}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2A6A10D9-E321-4DF6-AF79-9D5F4AF7F747}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2A6A10D9-E321-4DF6-AF79-9D5F4AF7F747}.Debug|x86.Build.0 = Debug|Any CPU
+		{2A6A10D9-E321-4DF6-AF79-9D5F4AF7F747}.Release|x86.ActiveCfg = Release|Any CPU
+		{2A6A10D9-E321-4DF6-AF79-9D5F4AF7F747}.Release|x86.Build.0 = Release|Any CPU
 		{58138006-E137-4F22-9DC5-73037AA75F17}.Debug|x86.ActiveCfg = Debug|x86
 		{58138006-E137-4F22-9DC5-73037AA75F17}.Debug|x86.Build.0 = Debug|x86
 		{58138006-E137-4F22-9DC5-73037AA75F17}.Release|x86.ActiveCfg = Release|x86
