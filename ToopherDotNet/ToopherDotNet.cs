@@ -12,6 +12,7 @@ namespace Toopher
 {
 	public class ToopherAPI
 	{
+		public const string VERSION = "1.0.0";
 		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
 
 		string consumerKey;
