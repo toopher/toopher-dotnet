@@ -1,5 +1,8 @@
 #ToopherDotNet
 
+[![Build
+Status](https://travis-ci.org/toopher/toopher-dotnet.png?branch=master)](https://travis-ci.org/toopher/toopher-dotnet)
+
 #### Introduction
 ToopherDotNet is a Toopher API library that simplifies the task of interfacing with the Toopher API from DotNet programs.  It does not depend on any external libraries, and preconfigures the required OAuth and JSON functionality so you can focus on just using the API.
 

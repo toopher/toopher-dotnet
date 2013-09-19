@@ -12,6 +12,7 @@ namespace Toopher
 {
 	public class ToopherAPI
 	{
+		public const string VERSION = "1.0.0";
 		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
 
 		string consumerKey;
@@ -121,6 +122,8 @@ namespace Toopher
 
 			WebClient wClient = new WebClient ();
 			wClient.Headers.Add ("Authorization", auth);
+			wClient.Headers.Add ("User-Agent", 
+				string.Format("Toopher-DotNet/{0} (DotNet {1})", VERSION, Environment.Version.ToString()));
 			if (parameters.Count > 0) {
 				wClient.QueryString = parameters;
 			}
