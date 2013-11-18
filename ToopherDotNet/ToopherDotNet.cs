@@ -13,17 +13,29 @@ namespace Toopher
 {
 	public class ToopherAPI
 	{
-		public const string VERSION = "1.0.0";
+
+
+
+		public const string VERSION = "1.1.0";
 		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
 
 		string consumerKey;
 		string consumerSecret;
 		string baseUrl;
+		Type webClientProxyType;
 
 		// Create the ToopherAPI object tied to your requester credentials
 		// 
 		// Credentials are available on https://dev.toopher.com
-		public ToopherAPI (string consumerKey, string consumerSecret, string baseUrl = null)
+		/// <summary>
+		/// Create a new instance of the ToopherAPI client tied to your requester
+		/// credentials.  Credentials are available at https://dev.toopher.com
+		/// </summary>
+		/// <param name="consumerKey">OAuth Consumer Key</param>
+		/// <param name="consumerSecret">OAuth Consumer Secret</param>
+		/// <param name="baseUrl">Override url for ToopherAPI webservice (default=https://api.toopher.com/v1/) </param>
+		/// <param name="webClientType">Override WebClient class for testing purposes</param>
+		public ToopherAPI (string consumerKey, string consumerSecret, string baseUrl = null, Type webClientProxyType = null)
 		{
 			this.consumerKey = consumerKey;
 			this.consumerSecret = consumerSecret;
@@ -31,6 +43,11 @@ namespace Toopher
 				this.baseUrl = baseUrl;
 			} else {
 				this.baseUrl = ToopherAPI.DEFAULT_BASE_URL;
+			}
+			if (webClientProxyType != null) {
+				this.webClientProxyType = webClientProxyType;
+			} else {
+				this.webClientProxyType = typeof(WebClientProxy);
 			}
 		}
 
@@ -100,11 +117,11 @@ namespace Toopher
 		/// <param name="extras">Dictionary of arbitray key/value pairs to add to the webservice call</param>
 		/// <returns>AuthenticationStatus object</returns>
 		/// <exception cref="UserDisabledError">Thrown when Toopher Authentication is disabled for the user</exception>
-		/// <exception cref="UnknownUserError">Thrown when the user has no active pairings</exception>
-		/// <exception cref="UnknownTerminalError">Thrown when the terminal cannot be identified</exception>
+		/// <exception cref="UserUnknownError">Thrown when the user has no active pairings</exception>
+		/// <exception cref="TerminalUnknownError">Thrown when the terminal cannot be identified</exception>
 		/// <exception cref="PairingDeactivatedError">Thrown when the user has deleted the pairing from their mobile device</exception>
 		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
-		public AuthenticationStatus AuthenticateByUserName (string userName, string terminalIdentifier, string actionName, Dictionary<string, string> extras = null)
+		public AuthenticationStatus AuthenticateByUserName (string userName, string terminalIdentifier, string actionName = null, Dictionary<string, string> extras = null)
 		{
 			if (extras == null) {
 				extras = new Dictionary<string, string> ();
@@ -119,22 +136,30 @@ namespace Toopher
 		//
 		// Provide authentication request ID returned when authentication request was
 		// started.
-		public AuthenticationStatus GetAuthenticationStatus (string authenticationRequestId)
+		public AuthenticationStatus GetAuthenticationStatus (string authenticationRequestId, string otp = null)
 		{
 			string endpoint = String.Format ("authentication_requests/{0}", authenticationRequestId);
 
-			var json = get (endpoint);
+			JsonObject json;
+			if (String.IsNullOrEmpty (otp)) {
+				json = get (endpoint);
+				return new AuthenticationStatus (json);
+			} else {
+				NameValueCollection parameters = new NameValueCollection ();
+				parameters["otp"] = otp;
+				json = post (endpoint, parameters);
+			}
 			return new AuthenticationStatus (json);
 		}
 
 		/// <summary>
-		/// Associate a per-user Terminal Name with a given terminalIdentifier
+		/// Create a named terminal in the Toopher API for the (userName, terminalIdentifier) combination
 		/// </summary>
 		/// <param name="userName">Name of the user</param>
 		/// <param name="terminalName">User-assigned "friendly" terminal name</param>
 		/// <param name="terminalIdentifier">Unique terminal identifier for this terminal.  Does not need to be human-readable.</param>
 		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
-		public void AssignUserFriendlyNameToTerminal (string userName, string terminalName, string terminalIdentifier)
+		public void CreateUserTerminal (string userName, string terminalName, string terminalIdentifier)
 		{
 			string endpoint = "user_terminals/create";
 			NameValueCollection parameters = new NameValueCollection();
@@ -184,6 +209,13 @@ namespace Toopher
 				parameters = new NameValueCollection ();
 			}
 
+			// can't have null parameters, or oauth signing will barf
+			foreach (String key in parameters.AllKeys){
+				if (parameters[key] == null) {
+					parameters[key] = "";
+				}
+			}
+
 			var client = OAuthRequest.ForRequestToken (this.consumerKey, this.consumerSecret);
 			client.RequestUrl = this.baseUrl + endpoint;
 			client.Method = method;
@@ -192,52 +224,57 @@ namespace Toopher
 			// FIXME: OAuth library puts extraneous comma at end, workaround: remove it if present
 			auth = auth.TrimEnd (new char[] { ',' });
 
-			WebClient wClient = new WebClient ();
-			wClient.Headers.Add ("Authorization", auth);
-			wClient.Headers.Add ("User-Agent", 
-				string.Format("Toopher-DotNet/{0} (DotNet {1})", VERSION, Environment.Version.ToString()));
-			if (parameters.Count > 0) {
-				wClient.QueryString = parameters;
-			}
-
-			string response;
-			try {
-				if (method.Equals ("POST")) {
-					var responseArray = wClient.UploadValues (client.RequestUrl, client.Method, parameters);
-					response = Encoding.UTF8.GetString (responseArray);
-				} else {
-					response = wClient.DownloadString (client.RequestUrl);
+			using (WebClientProxy wClient = (WebClientProxy)Activator.CreateInstance(webClientProxyType)) {
+				wClient.Headers.Add ("Authorization", auth);
+				wClient.Headers.Add ("User-Agent",
+					string.Format ("Toopher-DotNet/{0} (DotNet {1})", VERSION, Environment.Version.ToString ()));
+				if (parameters.Count > 0) {
+					wClient.QueryString = parameters;
 				}
-			} catch (WebException wex) {
-					HttpWebResponse httpResp = (HttpWebResponse)wex.Response;
-				string error_message;
-				using (Stream stream = wex.Response.GetResponseStream ()) {
-					StreamReader reader = new StreamReader (stream, Encoding.UTF8);
-					error_message = reader.ReadToEnd ();
-				}
-				String statusLine =  httpResp.StatusCode.ToString () + " : " + httpResp.StatusDescription;
 
-				if (String.IsNullOrEmpty (error_message)) {
-					throw new RequestError (statusLine);
-				} else {
-
-					try {
-						// Attempt to parse JSON response
-						var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
-						parseRequestError (json);
-					} catch (Exception) {
-						throw new RequestError (statusLine + " : " + error_message);
+				string response;
+				try {
+					if (method.Equals ("POST")) {
+						var responseArray = wClient.UploadValues (client.RequestUrl, client.Method, parameters);
+						response = Encoding.UTF8.GetString (responseArray);
+					} else {
+						response = wClient.DownloadString (client.RequestUrl);
 					}
+				} catch (WebException wex) {
+					IHttpWebResponse httpResp = HttpWebResponseWrapper.create(wex.Response);
+					string error_message;
+					using (Stream stream = httpResp.GetResponseStream ()) {
+						StreamReader reader = new StreamReader (stream, Encoding.UTF8);
+						error_message = reader.ReadToEnd ();
+					}
+
+					String statusLine = httpResp.StatusCode.ToString () + " : " + httpResp.StatusDescription;
+
+					if (String.IsNullOrEmpty (error_message)) {
+						throw new RequestError (statusLine);
+					} else {
+
+						try {
+							// Attempt to parse JSON response
+							var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
+							parseRequestError (json);
+						} catch (RequestError e) {
+							throw e;
+						} catch (Exception) {
+							throw new RequestError (statusLine + " : " + error_message);
+						}
+					}
+
+					throw new RequestError (error_message, wex);
 				}
-
-				throw new RequestError (error_message, wex);
+			
+				try {
+					return SimpleJson.SimpleJson.DeserializeObject (response);
+				} catch (Exception ex) {
+					throw new RequestError ("Could not parse response", ex);
+				}
 			}
 
-			try {
-				return SimpleJson.SimpleJson.DeserializeObject (response);
-			} catch (Exception ex) {
-				throw new RequestError ("Could not parse response", ex);
-			}
 		}
 
 		
@@ -257,14 +294,14 @@ namespace Toopher
 
 		private void parseRequestError (JsonObject err)
 		{
-			int errCode = (int)err["error_code"];
+			long errCode = (long)err["error_code"];
 			string errMessage = (string)err["error_message"];
 			if (errCode == UserDisabledError.ERROR_CODE) {
 				throw new UserDisabledError ();
-			} else if (errCode == UnknownUserError.ERROR_CODE) {
-				throw new UnknownUserError ();
-			} else if (errCode == UnknownTerminalError.ERROR_CODE) {
-				throw new UnknownTerminalError ();
+			} else if (errCode == UserUnknownError.ERROR_CODE) {
+				throw new UserUnknownError ();
+			} else if (errCode == TerminalUnknownError.ERROR_CODE) {
+				throw new TerminalUnknownError ();
 			} else {
 				if (errMessage.ToLower ().Contains ("pairing has been deactivated")
 					|| errMessage.ToLower ().Contains ("pairing has not been authorized")) {
@@ -426,7 +463,7 @@ namespace Toopher
 	/// Requester should respond by guiding the user through the pairing process,
 	/// then re-authenticating
 	/// </summary>
-	public class UnknownUserError : RequestError
+	public class UserUnknownError : RequestError
 	{
 		static public int ERROR_CODE = 705;
 	}
@@ -435,7 +472,7 @@ namespace Toopher
 	/// Thrown when Toopher API encounters an unknown (user, requesterTerminalIdentifier) tuple.
 	/// Requester should respond by assigning a friendly name to the terminal
 	/// </summary>
-	public class UnknownTerminalError : RequestError
+	public class TerminalUnknownError : RequestError
 	{
 		static public int ERROR_CODE = 706;
 	}
@@ -448,6 +485,82 @@ namespace Toopher
 	{
 	}
 
+	/// <summary>
+	/// Design-For-Testability shims from here on down...
+	/// </summary>
+	
+	public class WebClientProxy : IDisposable
+	{
+		WebClient _theClient = new WebClient ();
+		public WebHeaderCollection Headers
+		{
+			get { return _theClient.Headers; }
+			set { _theClient.Headers = value; }
+		}
+		public NameValueCollection QueryString
+		{
+			get { return _theClient.QueryString; }
+			set { _theClient.QueryString = value; }
+		}
+		virtual public byte[] UploadValues (string requestUri, string method, NameValueCollection parameters)
+		{
+			return _theClient.UploadValues (requestUri, method, parameters);
+		}
+		virtual public string DownloadString (string requestUri)
+		{
+			return _theClient.DownloadString (requestUri);
+		}
+
+		public void Dispose ()
+		{
+			if (_theClient != null) {
+				_theClient.Dispose ();
+				_theClient = null;
+			}
+		}
+	}
+
+	public interface IHttpWebResponse
+	{
+		Stream GetResponseStream ();
+		HttpStatusCode StatusCode { get; }
+		string StatusDescription { get; }
+	}
+
+	class HttpWebResponseWrapper : IHttpWebResponse
+	{
+		private HttpWebResponse _wrapped;
+		public HttpWebResponseWrapper (HttpWebResponse wrapped)
+		{
+			this._wrapped = wrapped;
+		}
+		static public IHttpWebResponse create (object response)
+		{
+			//if it already implements IHttpWebResponse, return it directory
+			if(typeof(IHttpWebResponse).IsAssignableFrom(response.GetType())){
+				return (IHttpWebResponse)response;
+			} else if (typeof(HttpWebResponse).IsAssignableFrom(response.GetType())) {
+				return new HttpWebResponseWrapper((HttpWebResponse)response);
+			} else {
+				throw new NotImplementedException("Don't know how to transmute " + response.GetType().ToString() + " into IHttpWebResponse");
+			}
+		}
+
+		public Stream GetResponseStream ()
+		{
+			return _wrapped.GetResponseStream();
+		}
+
+		public HttpStatusCode StatusCode
+		{
+			get { return _wrapped.StatusCode; }
+		}
+
+		public string StatusDescription
+		{
+			get { return _wrapped.StatusDescription; }
+		}
+	}
 
 }
 
