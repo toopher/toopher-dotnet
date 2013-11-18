@@ -1,12 +1,13 @@
 using System;
 using OAuth;
 using System.Net;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
 using System.Runtime.Serialization;
 using SimpleJson;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Toopher
 {
@@ -90,6 +91,30 @@ namespace Toopher
 			return new AuthenticationStatus (json);
 		}
 
+		/// <summary>
+		/// Authenticate an action with Toopher
+		/// </summary>
+		/// <param name="userName">Name of the user</param>
+		/// <param name="terminalIdentifier">Unique terminal identifier for this terminal.  Does not need to be human-readable.</param>
+		/// <param name="actionName">Name of the action to authenticate.  default = "Login"</param>
+		/// <param name="extras">Dictionary of arbitray key/value pairs to add to the webservice call</param>
+		/// <returns>AuthenticationStatus object</returns>
+		/// <exception cref="UserDisabledError">Thrown when Toopher Authentication is disabled for the user</exception>
+		/// <exception cref="UnknownUserError">Thrown when the user has no active pairings</exception>
+		/// <exception cref="UnknownTerminalError">Thrown when the terminal cannot be identified</exception>
+		/// <exception cref="PairingDeactivatedError">Thrown when the user has deleted the pairing from their mobile device</exception>
+		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
+		public AuthenticationStatus AuthenticateByUserName (string userName, string terminalIdentifier, string actionName, Dictionary<string, string> extras = null)
+		{
+			if (extras == null) {
+				extras = new Dictionary<string, string> ();
+			}
+			extras["user_name"] = userName;
+			extras["terminal_name_extra"] = terminalIdentifier;
+
+			return this.Authenticate (null, null, actionName, extras);
+		}
+
 		// Check on status of authentication request
 		//
 		// Provide authentication request ID returned when authentication request was
@@ -102,7 +127,54 @@ namespace Toopher
 			return new AuthenticationStatus (json);
 		}
 
-		private JsonObject request (string method, string endpoint, NameValueCollection parameters = null)
+		/// <summary>
+		/// Associate a per-user Terminal Name with a given terminalIdentifier
+		/// </summary>
+		/// <param name="userName">Name of the user</param>
+		/// <param name="terminalName">User-assigned "friendly" terminal name</param>
+		/// <param name="terminalIdentifier">Unique terminal identifier for this terminal.  Does not need to be human-readable.</param>
+		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
+		public void AssignUserFriendlyNameToTerminal (string userName, string terminalName, string terminalIdentifier)
+		{
+			string endpoint = "user_terminals/create";
+			NameValueCollection parameters = new NameValueCollection();
+			parameters["user_name"] = userName;
+			parameters["name"] = terminalName;
+			parameters["name_extra"] = terminalIdentifier;
+			post (endpoint, parameters);
+		}
+
+		/// <summary>
+		/// Enable or Disable Toopher Authentication for an individual user.  If the user is
+		/// disabled, future attempts to authenticate the user with Toopher will return
+		/// a UserDisabledError
+		/// </summary>
+		/// <param name="userName">Name of the user to modify</param>
+		/// <param name="toopherEnabled">True if the user should be authenticated with Toopher</param>
+		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
+		private void SetToopherEnabledForUser (string userName, bool toopherEnabled)
+		{
+			string searchEndpoint = "users";
+			NameValueCollection parameters = new NameValueCollection ();
+			parameters["user_name"] = userName;
+
+			JsonArray jArr = getArray (searchEndpoint, parameters);
+			if (jArr.Count > 1) {
+				throw new RequestError ("Multiple users with name = " + userName);
+			}
+			if (jArr.Count == 0) {
+				throw new RequestError ("No users with name = " + userName);
+			}
+
+			string userId = (string)((JsonObject)jArr[0])["id"];
+
+			string updateEndpoint = "users/" + userId;
+			parameters = new NameValueCollection ();
+			parameters["disable_toopher_auth"] = toopherEnabled ? "false" : "true";
+			post (updateEndpoint, parameters);
+		}
+
+		private object request (string method, string endpoint, NameValueCollection parameters = null)
 		{
 			// Normalize method string
 			method = method.ToUpper ();
@@ -137,36 +209,71 @@ namespace Toopher
 					response = wClient.DownloadString (client.RequestUrl);
 				}
 			} catch (WebException wex) {
+					HttpWebResponse httpResp = (HttpWebResponse)wex.Response;
 				string error_message;
 				using (Stream stream = wex.Response.GetResponseStream ()) {
 					StreamReader reader = new StreamReader (stream, Encoding.UTF8);
 					error_message = reader.ReadToEnd ();
 				}
+				String statusLine =  httpResp.StatusCode.ToString () + " : " + httpResp.StatusDescription;
 
-				try {
-					// Attempt to parse JSON response
-					var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
-					error_message = (string)json["error_message"];
-				} catch (Exception) { /* Ignore */ }
+				if (String.IsNullOrEmpty (error_message)) {
+					throw new RequestError (statusLine);
+				} else {
+
+					try {
+						// Attempt to parse JSON response
+						var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
+						parseRequestError (json);
+					} catch (Exception) {
+						throw new RequestError (statusLine + " : " + error_message);
+					}
+				}
 
 				throw new RequestError (error_message, wex);
 			}
 
 			try {
-				return (JsonObject)SimpleJson.SimpleJson.DeserializeObject (response);
+				return SimpleJson.SimpleJson.DeserializeObject (response);
 			} catch (Exception ex) {
 				throw new RequestError ("Could not parse response", ex);
 			}
 		}
 
+		
 		private JsonObject get (string endpoint, NameValueCollection parameters = null)
 		{
-			return request ("GET", endpoint, parameters);
+			return (JsonObject)request ("GET", endpoint, parameters);
+		}
+		private JsonArray getArray (string endpoint, NameValueCollection parameters = null)
+		{
+			return (JsonArray)request ("GET", endpoint, parameters);
 		}
 
 		private JsonObject post (string endpoint, NameValueCollection parameters = null)
 		{
-			return request ("POST", endpoint, parameters);
+			return (JsonObject) request ("POST", endpoint, parameters);
+		}
+
+		private void parseRequestError (JsonObject err)
+		{
+			int errCode = (int)err["error_code"];
+			string errMessage = (string)err["error_message"];
+			if (errCode == UserDisabledError.ERROR_CODE) {
+				throw new UserDisabledError ();
+			} else if (errCode == UnknownUserError.ERROR_CODE) {
+				throw new UnknownUserError ();
+			} else if (errCode == UnknownTerminalError.ERROR_CODE) {
+				throw new UnknownTerminalError ();
+			} else {
+				if (errMessage.ToLower ().Contains ("pairing has been deactivated")
+					|| errMessage.ToLower ().Contains ("pairing has not been authorized")) {
+					throw new PairingDeactivatedError ();
+				} else {
+					throw new RequestError (errMessage);
+				}
+			}
+
 		}
 	}
 
@@ -301,9 +408,46 @@ namespace Toopher
 	// An exception class used to indicate an error in a request
 	public class RequestError : System.ApplicationException
 	{
+		public RequestError () : base () { }
 		public RequestError (string message) : base (message) { }
 		public RequestError (string message, System.Exception inner) : base (message, inner) { }
 	}
+
+	/// <summary>
+	/// Thrown when a requester attempts to authenticate a user who has been disabled
+	/// </summary>
+	public class UserDisabledError : RequestError
+	{
+		static public int ERROR_CODE = 704;
+	}
+
+	/// <summary>
+	/// Thrown when there is no active pairing for the user.
+	/// Requester should respond by guiding the user through the pairing process,
+	/// then re-authenticating
+	/// </summary>
+	public class UnknownUserError : RequestError
+	{
+		static public int ERROR_CODE = 705;
+	}
+
+	/// <summary>
+	/// Thrown when Toopher API encounters an unknown (user, requesterTerminalIdentifier) tuple.
+	/// Requester should respond by assigning a friendly name to the terminal
+	/// </summary>
+	public class UnknownTerminalError : RequestError
+	{
+		static public int ERROR_CODE = 706;
+	}
+
+	/// <summary>
+	/// Thrown when the user has deleted the pairing on their mobile device.
+	/// Requester should prompt user to re-pair their account
+	/// </summary>
+	public class PairingDeactivatedError : RequestError
+	{
+	}
+
 
 }
 
