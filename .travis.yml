@@ -6,4 +6,4 @@ install:
 script:
   - mozroots --import --sync
   - xbuild
-  - nunit-console ./ToopherDotNetTests/bin/Debug/ToopherDotNetTests.dll -exclude Integration,NotWorkingOnMono
+  - nunit-console ./ToopherDotNetTests/bin/Debug/ToopherDotNetTests.dll -config=Debug -exclude Integration,NotWorkingOnMono

@@ -70,7 +70,7 @@ namespace ToopherDotNetTests
 			}
 		}
 
-		[TestFixtureSetUp]
+		[SetUp]
 		public void Init ()
 		{
 			WebClientMock.ReturnException = null;
@@ -78,6 +78,7 @@ namespace ToopherDotNetTests
 			WebClientMock.LastRequestMethod = null;
 			WebClientMock.LastRequestData = null;
 		}
+
 		private ToopherAPI getApi ()
 		{
 			return new ToopherAPI ("key", "secret", null, typeof (WebClientMock));
@@ -114,18 +115,6 @@ namespace ToopherDotNetTests
 			Assert.AreEqual (pairing.id, "1");
 		}
 
-		[Test]
-		public void PairingStatusTest ()
-		{
-			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
-			PairingStatus pairing = api.GetPairingStatus ("1");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (pairing.id, "1");
-			Assert.AreEqual (pairing.userName, "some user");
-			Assert.AreEqual (pairing.userId, "1");
-			Assert.IsTrue (pairing.enabled);
-		}
 
 		[Test]
 		public void AuthenticateTest ()
@@ -151,30 +140,9 @@ namespace ToopherDotNetTests
 			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name"], "");
 		}
 
-		[Test]
-		public void GetAuthenticationStatusWIthOtpTest ()
-		{
-			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationStatus auth = api.GetAuthenticationStatus("1", otp: "123456");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["otp"], "123456");
-		}
+		
 
-		[Test]
-		public void GetAuthenticationStatusTest ()
-		{
-			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationStatus auth = api.GetAuthenticationStatus ("1");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (auth.id, "1");
-			Assert.IsFalse (auth.pending);
-			Assert.IsTrue (auth.granted);
-			Assert.AreEqual (auth.reason, "its a test");
-			Assert.AreEqual (auth.terminalId, "1");
-			Assert.AreEqual (auth.terminalName, "test terminal");
-		}
+		
 
 		[Test]
 		public void ArbitraryParametersOnPairTest ()
@@ -274,6 +242,45 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
 				@"{""error_code"":601, ""error_message"":""This pairing has not been authorized to authenticate.""}");
 			api.AuthenticateByUserName ("some unauthorized user", "some random string");
+		}
+
+		[Test]
+		public void GetAuthenticationStatusTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
+			AuthenticationStatus auth = api.GetAuthenticationStatus ("1");
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual (auth.id, "1");
+			Assert.IsFalse (auth.pending);
+			Assert.IsTrue (auth.granted);
+			Assert.AreEqual (auth.reason, "its a test");
+			Assert.AreEqual (auth.terminalId, "1");
+			Assert.AreEqual (auth.terminalName, "test terminal");
+		}
+
+		[Test]
+		public void GetAuthenticationStatusWIthOtpTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
+			AuthenticationStatus auth = api.GetAuthenticationStatus ("1", otp: "123456");
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (WebClientMock.LastRequestData["otp"], "123456");
+		}
+
+
+		[Test]
+		public void PairingStatusTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			PairingStatus pairing = api.GetPairingStatus ("1");
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual (pairing.id, "1");
+			Assert.AreEqual (pairing.userName, "some user");
+			Assert.AreEqual (pairing.userId, "1");
+			Assert.IsTrue (pairing.enabled);
 		}
 	}
 }
