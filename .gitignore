@@ -99,3 +99,7 @@ UpgradeLog*.XML
 
 ### ETG custom
 *.userprefs
+
+# Nuget
+packages/*
+!packages/repositories.config
