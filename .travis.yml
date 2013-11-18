@@ -4,5 +4,6 @@ install:
   - sudo apt-get install mono-devel mono-gmcs nunit-console
 
 script:
+  - mozroots --import --sync
   - xbuild
   - nunit-console ./ToopherDotNetTests/bin/Debug/ToopherDotNetTests.dll -exclude Integration,NotWorkingOnMono
