@@ -199,6 +199,17 @@ namespace Toopher
 			post (updateEndpoint, parameters);
 		}
 
+		public string GetPairingResetLink (string pairingId, string securityQuestion = null, string securityAnswer = null)
+		{
+			string endpoint = "pairings/" + pairingId + "/generate_reset_link";
+			NameValueCollection parameters = new NameValueCollection ();
+			parameters["security_question"] = securityQuestion;
+			parameters["security_answer"] = securityAnswer;
+
+			JsonObject pairingResetLink = post (endpoint, parameters);
+			return (string)pairingResetLink["url"];
+		}
+
 		private object request (string method, string endpoint, NameValueCollection parameters = null)
 		{
 			// Normalize method string
