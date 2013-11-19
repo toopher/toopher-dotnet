@@ -177,7 +177,7 @@ namespace Toopher
 		/// <param name="userName">Name of the user to modify</param>
 		/// <param name="toopherEnabled">True if the user should be authenticated with Toopher</param>
 		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
-		private void SetToopherEnabledForUser (string userName, bool toopherEnabled)
+		public void SetToopherEnabledForUser (string userName, bool toopherEnabled)
 		{
 			string searchEndpoint = "users";
 			NameValueCollection parameters = new NameValueCollection ();
