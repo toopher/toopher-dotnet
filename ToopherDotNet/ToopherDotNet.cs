@@ -147,7 +147,7 @@ namespace Toopher
 			} else {
 				NameValueCollection parameters = new NameValueCollection ();
 				parameters["otp"] = otp;
-				json = post (endpoint, parameters);
+				json = post (endpoint + "/otp_auth", parameters);
 			}
 			return new AuthenticationStatus (json);
 		}
