@@ -198,6 +198,11 @@ namespace Toopher
 			get;
 			private set;
 		}
+		public bool pending
+		{
+			get;
+			private set;
+		}
 		public bool enabled
 		{
 			get;
@@ -206,7 +211,7 @@ namespace Toopher
 
 		public override string ToString ()
 		{
-			return string.Format ("[PairingStatus: id={0}; userId={1}; userName={2}, enabled={3}]", id, userId, userName, enabled);
+			return string.Format ("[PairingStatus: id={0}; userId={1}; userName={2}, enabled={3}, pending={4}]", id, userId, userName, enabled, pending);
 		}
 
 		public PairingStatus (IDictionary<string, object> _dict)
@@ -214,7 +219,9 @@ namespace Toopher
 			try {
 				this._dict = _dict;
 				this.id = (string)_dict["id"];
+				this.pending = (bool)_dict["pending"];
 				this.enabled = (bool)_dict["enabled"];
+
 				var user = (JsonObject)_dict["user"];
 				this.userId = (string)user["id"];
 				this.userName = (string)user["name"];
