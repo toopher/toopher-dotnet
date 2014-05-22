@@ -1,28 +1,41 @@
 using System;
 using OAuth;
 using System.Net;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
 using System.Runtime.Serialization;
 using SimpleJson;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Toopher
 {
 	public class ToopherAPI
 	{
-		public const string VERSION = "1.0.0";
+
+
+
+		public const string VERSION = "1.1.0";
 		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
 
 		string consumerKey;
 		string consumerSecret;
 		string baseUrl;
+		Type webClientProxyType;
 
 		// Create the ToopherAPI object tied to your requester credentials
 		// 
 		// Credentials are available on https://dev.toopher.com
-		public ToopherAPI (string consumerKey, string consumerSecret, string baseUrl = null)
+		/// <summary>
+		/// Create a new instance of the ToopherAPI client tied to your requester
+		/// credentials.  Credentials are available at https://dev.toopher.com
+		/// </summary>
+		/// <param name="consumerKey">OAuth Consumer Key</param>
+		/// <param name="consumerSecret">OAuth Consumer Secret</param>
+		/// <param name="baseUrl">Override url for ToopherAPI webservice (default=https://api.toopher.com/v1/) </param>
+		/// <param name="webClientType">Override WebClient class for testing purposes</param>
+		public ToopherAPI (string consumerKey, string consumerSecret, string baseUrl = null, Type webClientProxyType = null)
 		{
 			this.consumerKey = consumerKey;
 			this.consumerSecret = consumerSecret;
@@ -30,6 +43,11 @@ namespace Toopher
 				this.baseUrl = baseUrl;
 			} else {
 				this.baseUrl = ToopherAPI.DEFAULT_BASE_URL;
+			}
+			if (webClientProxyType != null) {
+				this.webClientProxyType = webClientProxyType;
+			} else {
+				this.webClientProxyType = typeof(WebClientProxy);
 			}
 		}
 
@@ -90,19 +108,109 @@ namespace Toopher
 			return new AuthenticationStatus (json);
 		}
 
+		/// <summary>
+		/// Authenticate an action with Toopher
+		/// </summary>
+		/// <param name="userName">Name of the user</param>
+		/// <param name="terminalIdentifier">Unique terminal identifier for this terminal.  Does not need to be human-readable.</param>
+		/// <param name="actionName">Name of the action to authenticate.  default = "Login"</param>
+		/// <param name="extras">Dictionary of arbitray key/value pairs to add to the webservice call</param>
+		/// <returns>AuthenticationStatus object</returns>
+		/// <exception cref="UserDisabledError">Thrown when Toopher Authentication is disabled for the user</exception>
+		/// <exception cref="UserUnknownError">Thrown when the user has no active pairings</exception>
+		/// <exception cref="TerminalUnknownError">Thrown when the terminal cannot be identified</exception>
+		/// <exception cref="PairingDeactivatedError">Thrown when the user has deleted the pairing from their mobile device</exception>
+		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
+		public AuthenticationStatus AuthenticateByUserName (string userName, string terminalIdentifier, string actionName = null, Dictionary<string, string> extras = null)
+		{
+			if (extras == null) {
+				extras = new Dictionary<string, string> ();
+			}
+			extras["user_name"] = userName;
+			extras["terminal_name_extra"] = terminalIdentifier;
+
+			return this.Authenticate (null, null, actionName, extras);
+		}
+
 		// Check on status of authentication request
 		//
 		// Provide authentication request ID returned when authentication request was
 		// started.
-		public AuthenticationStatus GetAuthenticationStatus (string authenticationRequestId)
+		public AuthenticationStatus GetAuthenticationStatus (string authenticationRequestId, string otp = null)
 		{
 			string endpoint = String.Format ("authentication_requests/{0}", authenticationRequestId);
 
-			var json = get (endpoint);
+			JsonObject json;
+			if (String.IsNullOrEmpty (otp)) {
+				json = get (endpoint);
+				return new AuthenticationStatus (json);
+			} else {
+				NameValueCollection parameters = new NameValueCollection ();
+				parameters["otp"] = otp;
+				json = post (endpoint + "/otp_auth", parameters);
+			}
 			return new AuthenticationStatus (json);
 		}
 
-		private JsonObject request (string method, string endpoint, NameValueCollection parameters = null)
+		/// <summary>
+		/// Create a named terminal in the Toopher API for the (userName, terminalIdentifier) combination
+		/// </summary>
+		/// <param name="userName">Name of the user</param>
+		/// <param name="terminalName">User-assigned "friendly" terminal name</param>
+		/// <param name="terminalIdentifier">Unique terminal identifier for this terminal.  Does not need to be human-readable.</param>
+		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
+		public void CreateUserTerminal (string userName, string terminalName, string terminalIdentifier)
+		{
+			string endpoint = "user_terminals/create";
+			NameValueCollection parameters = new NameValueCollection();
+			parameters["user_name"] = userName;
+			parameters["name"] = terminalName;
+			parameters["name_extra"] = terminalIdentifier;
+			post (endpoint, parameters);
+		}
+
+		/// <summary>
+		/// Enable or Disable Toopher Authentication for an individual user.  If the user is
+		/// disabled, future attempts to authenticate the user with Toopher will return
+		/// a UserDisabledError
+		/// </summary>
+		/// <param name="userName">Name of the user to modify</param>
+		/// <param name="toopherEnabled">True if the user should be authenticated with Toopher</param>
+		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
+		public void SetToopherEnabledForUser (string userName, bool toopherEnabled)
+		{
+			string searchEndpoint = "users";
+			NameValueCollection parameters = new NameValueCollection ();
+			parameters["user_name"] = userName;
+
+			JsonArray jArr = getArray (searchEndpoint, parameters);
+			if (jArr.Count > 1) {
+				throw new RequestError ("Multiple users with name = " + userName);
+			}
+			if (jArr.Count == 0) {
+				throw new RequestError ("No users with name = " + userName);
+			}
+
+			string userId = (string)((JsonObject)jArr[0])["id"];
+
+			string updateEndpoint = "users/" + userId;
+			parameters = new NameValueCollection ();
+			parameters["disable_toopher_auth"] = toopherEnabled ? "false" : "true";
+			post (updateEndpoint, parameters);
+		}
+
+		public string GetPairingResetLink (string pairingId, string securityQuestion = null, string securityAnswer = null)
+		{
+			string endpoint = "pairings/" + pairingId + "/generate_reset_link";
+			NameValueCollection parameters = new NameValueCollection ();
+			parameters["security_question"] = securityQuestion;
+			parameters["security_answer"] = securityAnswer;
+
+			JsonObject pairingResetLink = post (endpoint, parameters);
+			return (string)pairingResetLink["url"];
+		}
+
+		private object request (string method, string endpoint, NameValueCollection parameters = null)
 		{
 			// Normalize method string
 			method = method.ToUpper ();
@@ -110,6 +218,13 @@ namespace Toopher
 			// Build an empty collection for parameters (if necessary)
 			if (parameters == null) {
 				parameters = new NameValueCollection ();
+			}
+
+			// can't have null parameters, or oauth signing will barf
+			foreach (String key in parameters.AllKeys){
+				if (parameters[key] == null) {
+					parameters[key] = "";
+				}
 			}
 
 			var client = OAuthRequest.ForRequestToken (this.consumerKey, this.consumerSecret);
@@ -120,53 +235,93 @@ namespace Toopher
 			// FIXME: OAuth library puts extraneous comma at end, workaround: remove it if present
 			auth = auth.TrimEnd (new char[] { ',' });
 
-			WebClient wClient = new WebClient ();
-			wClient.Headers.Add ("Authorization", auth);
-			wClient.Headers.Add ("User-Agent", 
-				string.Format("Toopher-DotNet/{0} (DotNet {1})", VERSION, Environment.Version.ToString()));
-			if (parameters.Count > 0) {
-				wClient.QueryString = parameters;
-			}
-
-			string response;
-			try {
-				if (method.Equals ("POST")) {
-					var responseArray = wClient.UploadValues (client.RequestUrl, client.Method, parameters);
-					response = Encoding.UTF8.GetString (responseArray);
-				} else {
-					response = wClient.DownloadString (client.RequestUrl);
-				}
-			} catch (WebException wex) {
-				string error_message;
-				using (Stream stream = wex.Response.GetResponseStream ()) {
-					StreamReader reader = new StreamReader (stream, Encoding.UTF8);
-					error_message = reader.ReadToEnd ();
+			using (WebClientProxy wClient = (WebClientProxy)Activator.CreateInstance(webClientProxyType)) {
+				wClient.Headers.Add ("Authorization", auth);
+				wClient.Headers.Add ("User-Agent",
+					string.Format ("Toopher-DotNet/{0} (DotNet {1})", VERSION, Environment.Version.ToString ()));
+				if (parameters.Count > 0) {
+					wClient.QueryString = parameters;
 				}
 
+				string response;
 				try {
-					// Attempt to parse JSON response
-					var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
-					error_message = (string)json["error_message"];
-				} catch (Exception) { /* Ignore */ }
+					if (method.Equals ("POST")) {
+						var responseArray = wClient.UploadValues (client.RequestUrl, client.Method, parameters);
+						response = Encoding.UTF8.GetString (responseArray);
+					} else {
+						response = wClient.DownloadString (client.RequestUrl);
+					}
+				} catch (WebException wex) {
+					IHttpWebResponse httpResp = HttpWebResponseWrapper.create(wex.Response);
+					string error_message;
+					using (Stream stream = httpResp.GetResponseStream ()) {
+						StreamReader reader = new StreamReader (stream, Encoding.UTF8);
+						error_message = reader.ReadToEnd ();
+					}
 
-				throw new RequestError (error_message, wex);
+					String statusLine = httpResp.StatusCode.ToString () + " : " + httpResp.StatusDescription;
+
+					if (String.IsNullOrEmpty (error_message)) {
+						throw new RequestError (statusLine);
+					} else {
+
+						try {
+							// Attempt to parse JSON response
+							var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
+							parseRequestError (json);
+						} catch (RequestError e) {
+							throw e;
+						} catch (Exception) {
+							throw new RequestError (statusLine + " : " + error_message);
+						}
+					}
+
+					throw new RequestError (error_message, wex);
+				}
+			
+				try {
+					return SimpleJson.SimpleJson.DeserializeObject (response);
+				} catch (Exception ex) {
+					throw new RequestError ("Could not parse response", ex);
+				}
 			}
 
-			try {
-				return (JsonObject)SimpleJson.SimpleJson.DeserializeObject (response);
-			} catch (Exception ex) {
-				throw new RequestError ("Could not parse response", ex);
-			}
 		}
 
+		
 		private JsonObject get (string endpoint, NameValueCollection parameters = null)
 		{
-			return request ("GET", endpoint, parameters);
+			return (JsonObject)request ("GET", endpoint, parameters);
+		}
+		private JsonArray getArray (string endpoint, NameValueCollection parameters = null)
+		{
+			return (JsonArray)request ("GET", endpoint, parameters);
 		}
 
 		private JsonObject post (string endpoint, NameValueCollection parameters = null)
 		{
-			return request ("POST", endpoint, parameters);
+			return (JsonObject) request ("POST", endpoint, parameters);
+		}
+
+		private void parseRequestError (JsonObject err)
+		{
+			long errCode = (long)err["error_code"];
+			string errMessage = (string)err["error_message"];
+			if (errCode == UserDisabledError.ERROR_CODE) {
+				throw new UserDisabledError ();
+			} else if (errCode == UserUnknownError.ERROR_CODE) {
+				throw new UserUnknownError ();
+			} else if (errCode == TerminalUnknownError.ERROR_CODE) {
+				throw new TerminalUnknownError ();
+			} else {
+				if (errMessage.ToLower ().Contains ("pairing has been deactivated")
+					|| errMessage.ToLower ().Contains ("pairing has not been authorized")) {
+					throw new PairingDeactivatedError ();
+				} else {
+					throw new RequestError (errMessage);
+				}
+			}
+
 		}
 	}
 
@@ -308,8 +463,121 @@ namespace Toopher
 	// An exception class used to indicate an error in a request
 	public class RequestError : System.ApplicationException
 	{
+		public RequestError () : base () { }
 		public RequestError (string message) : base (message) { }
 		public RequestError (string message, System.Exception inner) : base (message, inner) { }
+	}
+
+	/// <summary>
+	/// Thrown when a requester attempts to authenticate a user who has been disabled
+	/// </summary>
+	public class UserDisabledError : RequestError
+	{
+		static public int ERROR_CODE = 704;
+	}
+
+	/// <summary>
+	/// Thrown when there is no active pairing for the user.
+	/// Requester should respond by guiding the user through the pairing process,
+	/// then re-authenticating
+	/// </summary>
+	public class UserUnknownError : RequestError
+	{
+		static public int ERROR_CODE = 705;
+	}
+
+	/// <summary>
+	/// Thrown when Toopher API encounters an unknown (user, requesterTerminalIdentifier) tuple.
+	/// Requester should respond by assigning a friendly name to the terminal
+	/// </summary>
+	public class TerminalUnknownError : RequestError
+	{
+		static public int ERROR_CODE = 706;
+	}
+
+	/// <summary>
+	/// Thrown when the user has deleted the pairing on their mobile device.
+	/// Requester should prompt user to re-pair their account
+	/// </summary>
+	public class PairingDeactivatedError : RequestError
+	{
+	}
+
+	/// <summary>
+	/// Design-For-Testability shims from here on down...
+	/// </summary>
+	
+	public class WebClientProxy : IDisposable
+	{
+		WebClient _theClient = new WebClient ();
+		public WebHeaderCollection Headers
+		{
+			get { return _theClient.Headers; }
+			set { _theClient.Headers = value; }
+		}
+		public NameValueCollection QueryString
+		{
+			get { return _theClient.QueryString; }
+			set { _theClient.QueryString = value; }
+		}
+		virtual public byte[] UploadValues (string requestUri, string method, NameValueCollection parameters)
+		{
+			return _theClient.UploadValues (requestUri, method, parameters);
+		}
+		virtual public string DownloadString (string requestUri)
+		{
+			return _theClient.DownloadString (requestUri);
+		}
+
+		public void Dispose ()
+		{
+			if (_theClient != null) {
+				_theClient.Dispose ();
+				_theClient = null;
+			}
+		}
+	}
+
+	public interface IHttpWebResponse
+	{
+		Stream GetResponseStream ();
+		HttpStatusCode StatusCode { get; }
+		string StatusDescription { get; }
+	}
+
+	class HttpWebResponseWrapper : IHttpWebResponse
+	{
+		private HttpWebResponse _wrapped;
+		public HttpWebResponseWrapper (HttpWebResponse wrapped)
+		{
+			this._wrapped = wrapped;
+		}
+		static public IHttpWebResponse create (object response)
+		{
+			//if it already implements IHttpWebResponse, return it directory
+			if(typeof(IHttpWebResponse).IsAssignableFrom(response.GetType())){
+				return (IHttpWebResponse)response;
+			} else if (typeof(HttpWebResponse).IsAssignableFrom(response.GetType())) {
+				return new HttpWebResponseWrapper((HttpWebResponse)response);
+			} else {
+				throw new NotImplementedException("Don't know how to transmute " + response.GetType().ToString() + " into IHttpWebResponse");
+			}
+		}
+
+		public Stream GetResponseStream ()
+		{
+			return _wrapped.GetResponseStream();
+		}
+
+		public HttpStatusCode StatusCode
+		{
+			get { return _wrapped.StatusCode; }
+		}
+
+		public string StatusDescription
+		{
+			get { return _wrapped.StatusDescription; }
+		}
 	}
 
 }
