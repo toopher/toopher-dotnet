@@ -15,7 +15,7 @@ namespace ToopherDotNetTests
 		{
 			HttpStatusCode errorCode;
 			Stream responseStream;
-			
+
 			public MockWebResponse (HttpStatusCode errorCode, string responseBody)
 			{
 				this.errorCode = errorCode;
@@ -108,7 +108,7 @@ namespace ToopherDotNetTests
 		public void CreatePairingTest ()
 		{
 			var api = getApi();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
 			PairingStatus pairing = api.Pair ("awkward turtle", "some user");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["pairing_phrase"], "awkward turtle");
@@ -140,15 +140,15 @@ namespace ToopherDotNetTests
 			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name"], "");
 		}
 
-		
 
-		
+
+
 
 		[Test]
 		public void ArbitraryParametersOnPairTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
 			PairingStatus pairing = api.Pair ("awkward turtle", "some user", extras: new Dictionary<string,string>(){{"test_param", "42"}});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
@@ -168,7 +168,7 @@ namespace ToopherDotNetTests
 		public void AccessArbitraryKeysInPairingStatusTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}, ""random_key"":""84""}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}, ""random_key"":""84""}";
 			PairingStatus pairing = api.GetPairingStatus ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (pairing.id, "1");
@@ -274,7 +274,7 @@ namespace ToopherDotNetTests
 		public void PairingStatusTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
 			PairingStatus pairing = api.GetPairingStatus ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (pairing.id, "1");
@@ -293,4 +293,3 @@ namespace ToopherDotNetTests
 		}
 	}
 }
-
