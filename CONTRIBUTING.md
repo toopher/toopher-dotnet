@@ -1,5 +1,11 @@
 # ToopherAPI DotNet Client
 
+#### .NET Framework Version
+>=4.5
+
+#### C# Version
+>=5.0
+
 #### Installing Dependencies
 Toopher uses [Mono](http://www.mono-project.com/).
 
