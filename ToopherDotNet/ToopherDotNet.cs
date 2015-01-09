@@ -252,31 +252,35 @@ namespace Toopher
 						response = wClient.DownloadString (client.RequestUrl);
 					}
 				} catch (WebException wex) {
-					IHttpWebResponse httpResp = HttpWebResponseWrapper.create(wex.Response);
-					string error_message;
-					using (Stream stream = httpResp.GetResponseStream ()) {
-						StreamReader reader = new StreamReader (stream, Encoding.UTF8);
-						error_message = reader.ReadToEnd ();
-					}
-
-					String statusLine = httpResp.StatusCode.ToString () + " : " + httpResp.StatusDescription;
-
-					if (String.IsNullOrEmpty (error_message)) {
-						throw new RequestError (statusLine);
-					} else {
-
-						try {
-							// Attempt to parse JSON response
-							var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
-							parseRequestError (json);
-						} catch (RequestError e) {
-							throw e;
-						} catch (Exception) {
-							throw new RequestError (statusLine + " : " + error_message);
+					if (wex.Response != null) {
+						IHttpWebResponse httpResp = HttpWebResponseWrapper.create(wex.Response);
+						string error_message;
+						using (Stream stream = httpResp.GetResponseStream ()) {
+							StreamReader reader = new StreamReader (stream, Encoding.UTF8);
+							error_message = reader.ReadToEnd ();
 						}
-					}
 
-					throw new RequestError (error_message, wex);
+						String statusLine = httpResp.StatusCode.ToString () + " : " + httpResp.StatusDescription;
+
+						if (String.IsNullOrEmpty (error_message)) {
+							throw new RequestError (statusLine);
+						} else {
+
+							try {
+								// Attempt to parse JSON response
+								var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
+								parseRequestError (json);
+							} catch (RequestError e) {
+								throw e;
+							} catch (Exception) {
+								throw new RequestError (statusLine + " : " + error_message);
+							}
+						}
+
+						throw new RequestError (error_message, wex);
+					} else {
+						throw new RequestError ("Unable to contact server", wex);
+					}
 				}
 			
 				try {
