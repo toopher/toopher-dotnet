@@ -97,20 +97,29 @@ namespace Toopher
 			return new Pairing (json);
 		}
 
-		// Authenticate an action with Toopher
+		// Initiate an authentication request by pairing id or username
 		//
-		// Provide pairing ID, a name for the terminal (displayed to user) and
-		// an option action name (displayed to user) [defaults to "log in"]
-		public AuthenticationRequest Authenticate (string pairingId, string terminalName, string actionName = null, Dictionary<string, string> extras = null)
+		// Provide pairing ID or username, a name for the terminal (displayed to user) or requester-specified ID,
+		// an optional action name (displayed to user) [defaults to "log in"] and
+		// an optional Dictionary of extras to be sent to the API
+		public AuthenticationRequest Authenticate (string pairingIdOrUsername, string terminalNameOrTerminalNameExtra, string actionName = null, Dictionary<string, string> extras = null)
 		{
 			string endpoint = "authentication_requests/initiate";
-
 			NameValueCollection parameters = new NameValueCollection ();
-			parameters.Add ("pairing_id", pairingId);
-			parameters.Add ("terminal_name", terminalName);
-			if (actionName != null) {
+
+			try {
+				Guid pairingId = new Guid(pairingIdOrUsername);
+				parameters.Add ("pairing_id", pairingIdOrUsername);
+				parameters.Add ("terminal_name", terminalNameOrTerminalNameExtra);
+			} catch (Exception e) {
+				parameters.Add ("user_name", pairingIdOrUsername);
+				parameters.Add ("terminal_name_extra", terminalNameOrTerminalNameExtra);
+			}
+
+			if (actionName != null && actionName.Length > 0) {
 				parameters.Add ("action_name", actionName);
 			}
+
 			if (extras != null) {
 				foreach (KeyValuePair<string, string> kvp in extras) {
 					parameters.Add (kvp.Key, kvp.Value);
@@ -119,30 +128,6 @@ namespace Toopher
 
 			var json = post (endpoint, parameters);
 			return new AuthenticationRequest (json);
-		}
-
-		/// <summary>
-		/// Authenticate an action with Toopher
-		/// </summary>
-		/// <param name="userName">Name of the user</param>
-		/// <param name="terminalIdentifier">Unique terminal identifier for this terminal.  Does not need to be human-readable.</param>
-		/// <param name="actionName">Name of the action to authenticate.  default = "Login"</param>
-		/// <param name="extras">Dictionary of arbitray key/value pairs to add to the webservice call</param>
-		/// <returns>AuthenticationRequest object</returns>
-		/// <exception cref="UserDisabledError">Thrown when Toopher Authentication is disabled for the user</exception>
-		/// <exception cref="UserUnknownError">Thrown when the user has no active pairings</exception>
-		/// <exception cref="TerminalUnknownError">Thrown when the terminal cannot be identified</exception>
-		/// <exception cref="PairingDeactivatedError">Thrown when the user has deleted the pairing from their mobile device</exception>
-		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
-		public AuthenticationRequest AuthenticateByUserName (string userName, string terminalIdentifier, string actionName = null, Dictionary<string, string> extras = null)
-		{
-			if (extras == null) {
-				extras = new Dictionary<string, string> ();
-			}
-			extras["user_name"] = userName;
-			extras["terminal_name_extra"] = terminalIdentifier;
-
-			return this.Authenticate (null, null, actionName, extras);
 		}
 
 		// Check on status of authentication request

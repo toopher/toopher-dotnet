@@ -75,7 +75,7 @@ namespace Toopher
 					case STATE.AUTHENTICATE: {
 						try {
 							Console.WriteLine (String.Format ("\n\nAuthenticating user \"{0}\"", userName));
-							authStatus = api.AuthenticateByUserName (userName, terminalIdentifier);
+							authStatus = api.Authenticate (userName, terminalIdentifier);
 							state = STATE.EVALUATE_AUTHENTICATION_STATUS;
 						} catch (UserDisabledError e) {
 							state = STATE.USER_DISABLED;

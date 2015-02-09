@@ -140,32 +140,28 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void AuthenticateTest ()
+		public void AuthenticateWithPairingIdTest ()
 		{
+			string pairingId = Guid.NewGuid().ToString();
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationRequest auth = api.Authenticate("1", "test terminal");
+			WebClientMock.ReturnValue = @"{""id"":"" + pairingId + "", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
+			AuthenticationRequest auth = api.Authenticate(pairingId, "test terminal");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["pairing_id"], "1");
+			Assert.AreEqual (WebClientMock.LastRequestData["pairing_id"], pairingId);
 			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name"], "test terminal");
 		}
 
 		[Test]
-		public void AuthenticateByUserNameTest ()
+		public void AuthenticateWithUsernameAndExtrasTest ()
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationRequest auth = api.AuthenticateByUserName ("some other user", "random string", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
+			AuthenticationRequest auth = api.Authenticate ("some other user", "requester specified id", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some other user");
-			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name_extra"], "random string");
+			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name_extra"], "requester specified id");
 			Assert.AreEqual (WebClientMock.LastRequestData["random_key"], "42");
-			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name"], "");
 		}
-
-
-
-
 
 		[Test]
 		public void ArbitraryParametersOnPairTest ()
@@ -224,7 +220,7 @@ namespace ToopherDotNetTests
 			var api = getApi ();
 			WebClientMock.ReturnException = makeError((HttpStatusCode)409,
 				@"{""error_code"":704, ""error_message"":""The specified user has disabled Toopher authentication.""}");
-			api.AuthenticateByUserName ("some disabled user", "some random string");
+			api.Authenticate ("some disabled user", "some random string");
 		}
 
 		[Test]
@@ -234,7 +230,7 @@ namespace ToopherDotNetTests
 			var api = getApi ();
 			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
 				@"{""error_code"":705, ""error_message"":""No matching user exists.""}");
-			api.AuthenticateByUserName ("some unknown user", "some random string");
+			api.Authenticate ("some unknown user", "some random string");
 		}
 
 		[Test]
@@ -244,7 +240,7 @@ namespace ToopherDotNetTests
 			var api = getApi ();
 			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
 				@"{""error_code"":706, ""error_message"":""No matching terminal exists.""}");
-			api.AuthenticateByUserName ("some unknown user", "some random string");
+			api.Authenticate ("some unknown user", "some random string");
 		}
 
 		[Test]
@@ -254,7 +250,7 @@ namespace ToopherDotNetTests
 			var api = getApi ();
 			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
 				@"{""error_code"":601, ""error_message"":""This pairing has been deactivated.""}");
-			api.AuthenticateByUserName ("some disabled user", "some random string");
+			api.Authenticate ("some disabled user", "some random string");
 		}
 
 		[Test]
@@ -264,7 +260,7 @@ namespace ToopherDotNetTests
 			var api = getApi ();
 			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
 				@"{""error_code"":601, ""error_message"":""This pairing has not been authorized to authenticate.""}");
-			api.AuthenticateByUserName ("some unauthorized user", "some random string");
+			api.Authenticate ("some unauthorized user", "some random string");
 		}
 
 		[Test]
