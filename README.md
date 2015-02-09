@@ -35,11 +35,11 @@ ToopherApi api = new ToopherApi("<your consumer key>", "<your consumer secret>")
 Pairing pairing = api.Pair("pairing phrase", "username@yourservice.com");
 
 // Step 2 - Authenticate a log in
-AuthenticationStatus auth = api.Authenticate(pairing.id, "my computer");
+AuthenticationRequest auth = api.Authenticate(pairing.id, "my computer");
 
 // Once they've responded you can then check the status
-AuthenticationStatus status = api.GetAuthenticationStatus(auth.id);
-if (auth.pending == false && auth.granted == true) {
+AuthenticationRequest status = api.GetAuthenticationRequest(auth.id);
+if (status.pending == false && status.granted == true) {
     // Success!
 }
 ```

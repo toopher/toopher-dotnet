@@ -121,7 +121,7 @@ namespace ToopherDotNetTests
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationStatus auth = api.Authenticate("1", "test terminal");
+			AuthenticationRequest auth = api.Authenticate("1", "test terminal");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["pairing_id"], "1");
 			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name"], "test terminal");
@@ -132,7 +132,7 @@ namespace ToopherDotNetTests
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationStatus auth = api.AuthenticateByUserName ("some other user", "random string", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
+			AuthenticationRequest auth = api.AuthenticateByUserName ("some other user", "random string", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some other user");
 			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name_extra"], "random string");
@@ -159,7 +159,7 @@ namespace ToopherDotNetTests
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationStatus auth = api.Authenticate ("1", "test terminal", extras: new Dictionary<string, string> () { { "test_param", "42" } });
+			AuthenticationRequest auth = api.Authenticate ("1", "test terminal", extras: new Dictionary<string, string> () { { "test_param", "42" } });
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
 		}
@@ -179,11 +179,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void AccessArbitraryKeysInAuthenticationStatusTest ()
+		public void AccessArbitraryKeysInAuthenticationRequestTest ()
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}, ""random_key"":""84""}";
-			AuthenticationStatus auth = api.GetAuthenticationStatus ("1");
+			AuthenticationRequest auth = api.GetAuthenticationRequest ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (auth.id, "1");
 			Assert.IsFalse (auth.pending);
@@ -245,11 +245,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void GetAuthenticationStatusTest ()
+		public void GetAuthenticationRequestTest ()
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationStatus auth = api.GetAuthenticationStatus ("1");
+			AuthenticationRequest auth = api.GetAuthenticationRequest ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (auth.id, "1");
 			Assert.IsFalse (auth.pending);
@@ -260,11 +260,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void GetAuthenticationStatusWIthOtpTest ()
+		public void GetAuthenticationRequestWIthOtpTest ()
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationStatus auth = api.GetAuthenticationStatus ("1", otp: "123456");
+			AuthenticationRequest auth = api.GetAuthenticationRequest ("1", otp: "123456");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["otp"], "123456");
 		}

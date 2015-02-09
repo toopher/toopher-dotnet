@@ -67,8 +67,8 @@ namespace Toopher
 			string terminalIdentifier = random.Next().ToString();
 
 			state = STATE.AUTHENTICATE;
-			AuthenticationStatus authStatus = null;
 			Pairing pairing = null;
+			AuthenticationRequest authStatus = null;
 
 			while (true) {
 				switch (state) {
@@ -108,7 +108,7 @@ namespace Toopher
 
 							Console.WriteLine ("Checking status of authentication request...");
 							try {
-								authStatus = api.GetAuthenticationStatus (authStatus.id);
+								authStatus = api.GetAuthenticationRequest (authStatus.id);
 								state = STATE.EVALUATE_AUTHENTICATION_STATUS;
 							} catch (RequestError err) {
 								Console.WriteLine (String.Format ("Could not check authentication status (reason:{0})", err.Message));
@@ -139,7 +139,7 @@ namespace Toopher
 					case STATE.ENTER_OTP: {
 						Console.Write ("Please enter the Pairing OTP value generated in the Toopher Mobile App: ");
 						string otp = Console.ReadLine ().Trim ();
-						authStatus = api.GetAuthenticationStatus (authStatus.id, otp: otp);
+						authStatus = api.GetAuthenticationRequest (authStatus.id, otp: otp);
 						state = STATE.EVALUATE_AUTHENTICATION_STATUS;
 						break;
 					};

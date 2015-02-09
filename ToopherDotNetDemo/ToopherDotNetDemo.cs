@@ -109,9 +109,9 @@ namespace Toopher
 					Console.ReadLine ();
 					Console.WriteLine ("Checking status of authentication request...");
 
-					AuthenticationStatus requestStatus;
+					AuthenticationRequest requestStatus;
 					try {
-						requestStatus = api.GetAuthenticationStatus (requestId);
+						requestStatus = api.GetAuthenticationRequest (requestId);
 					} catch (RequestError err) {
 						Console.WriteLine (String.Format ("Could not check authentication status (reason:{0})", err.Message));
 						continue;

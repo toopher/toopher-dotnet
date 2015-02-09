@@ -88,7 +88,7 @@ namespace Toopher
 		//
 		// Provide pairing ID, a name for the terminal (displayed to user) and
 		// an option action name (displayed to user) [defaults to "log in"]
-		public AuthenticationStatus Authenticate (string pairingId, string terminalName, string actionName = null, Dictionary<string, string> extras = null)
+		public AuthenticationRequest Authenticate (string pairingId, string terminalName, string actionName = null, Dictionary<string, string> extras = null)
 		{
 			string endpoint = "authentication_requests/initiate";
 
@@ -105,7 +105,7 @@ namespace Toopher
 			}
 
 			var json = post (endpoint, parameters);
-			return new AuthenticationStatus (json);
+			return new AuthenticationRequest (json);
 		}
 
 		/// <summary>
@@ -115,13 +115,13 @@ namespace Toopher
 		/// <param name="terminalIdentifier">Unique terminal identifier for this terminal.  Does not need to be human-readable.</param>
 		/// <param name="actionName">Name of the action to authenticate.  default = "Login"</param>
 		/// <param name="extras">Dictionary of arbitray key/value pairs to add to the webservice call</param>
-		/// <returns>AuthenticationStatus object</returns>
+		/// <returns>AuthenticationRequest object</returns>
 		/// <exception cref="UserDisabledError">Thrown when Toopher Authentication is disabled for the user</exception>
 		/// <exception cref="UserUnknownError">Thrown when the user has no active pairings</exception>
 		/// <exception cref="TerminalUnknownError">Thrown when the terminal cannot be identified</exception>
 		/// <exception cref="PairingDeactivatedError">Thrown when the user has deleted the pairing from their mobile device</exception>
 		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
-		public AuthenticationStatus AuthenticateByUserName (string userName, string terminalIdentifier, string actionName = null, Dictionary<string, string> extras = null)
+		public AuthenticationRequest AuthenticateByUserName (string userName, string terminalIdentifier, string actionName = null, Dictionary<string, string> extras = null)
 		{
 			if (extras == null) {
 				extras = new Dictionary<string, string> ();
@@ -136,20 +136,20 @@ namespace Toopher
 		//
 		// Provide authentication request ID returned when authentication request was
 		// started.
-		public AuthenticationStatus GetAuthenticationStatus (string authenticationRequestId, string otp = null)
+		public AuthenticationRequest GetAuthenticationRequest (string authenticationRequestId, string otp = null)
 		{
 			string endpoint = String.Format ("authentication_requests/{0}", authenticationRequestId);
 
 			JsonObject json;
 			if (String.IsNullOrEmpty (otp)) {
 				json = get (endpoint);
-				return new AuthenticationStatus (json);
+				return new AuthenticationRequest (json);
 			} else {
 				NameValueCollection parameters = new NameValueCollection ();
 				parameters["otp"] = otp;
 				json = post (endpoint + "/otp_auth", parameters);
 			}
-			return new AuthenticationStatus (json);
+			return new AuthenticationRequest (json);
 		}
 
 		/// <summary>
@@ -388,7 +388,7 @@ namespace Toopher
 	}
 
 	// Status information for an authentication request
-	public class AuthenticationStatus
+	public class AuthenticationRequest
 	{
 		private IDictionary<string, object> _dict;
 		public object this[string key]
@@ -437,10 +437,10 @@ namespace Toopher
 
 		public override string ToString ()
 		{
-			return string.Format ("[AuthenticationStatus: id={0}; pending={1}; granted={2}; automated={3}; reason={4}; terminalId={5}; terminalName={6}]", id, pending, granted, automated, reason, terminalId, terminalName);
+			return string.Format ("[AuthenticationRequest: id={0}; pending={1}; granted={2}; automated={3}; reason={4}; terminalId={5}; terminalName={6}]", id, pending, granted, automated, reason, terminalId, terminalName);
 		}
 
-		public AuthenticationStatus (IDictionary<string, object> _dict)
+		public AuthenticationRequest (IDictionary<string, object> _dict)
 		{
 			this._dict = _dict;
 			try {
