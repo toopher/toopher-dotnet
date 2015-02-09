@@ -55,7 +55,7 @@ namespace Toopher
 		//
 		// Must provide a pairing request (generated on their phone) and
 		// the user's name
-		public PairingStatus Pair (string pairingPhrase, string userName, Dictionary<string, string> extras = null)
+		public Pairing Pair (string pairingPhrase, string userName, Dictionary<string, string> extras = null)
 		{
 			string endpoint = "pairings/create";
 
@@ -70,18 +70,18 @@ namespace Toopher
 			}
 
 			var json = post (endpoint, parameters);
-			return new PairingStatus (json);
+			return new Pairing (json);
 		}
 
 		// Check on status of a pairing request
 		// 
 		// Must provide the ID returned when the pairing request was initiated
-		public PairingStatus GetPairingStatus (string pairingRequestId)
+		public Pairing GetPairing (string pairingRequestId)
 		{
 			string endpoint = String.Format ("pairings/{0}", pairingRequestId);
 
 			var json = get (endpoint);
-			return new PairingStatus (json);
+			return new Pairing (json);
 		}
 
 		// Authenticate an action with Toopher
@@ -326,7 +326,7 @@ namespace Toopher
 	}
 
 	// Status information for a pairing request
-	public class PairingStatus
+	public class Pairing
 	{
 		private IDictionary<string, Object> _dict;
 
@@ -366,10 +366,10 @@ namespace Toopher
 
 		public override string ToString ()
 		{
-			return string.Format ("[PairingStatus: id={0}; userId={1}; userName={2}, enabled={3}, pending={4}]", id, userId, userName, enabled, pending);
+			return string.Format ("[Pairing: id={0}; userId={1}; userName={2}, enabled={3}, pending={4}]", id, userId, userName, enabled, pending);
 		}
 
-		public PairingStatus (IDictionary<string, object> _dict)
+		public Pairing (IDictionary<string, object> _dict)
 		{
 			try {
 				this._dict = _dict;

@@ -67,8 +67,8 @@ namespace Toopher
 			string terminalIdentifier = random.Next().ToString();
 
 			state = STATE.AUTHENTICATE;
-			PairingStatus pairingStatus = null;
 			AuthenticationStatus authStatus = null;
+			Pairing pairing = null;
 
 			while (true) {
 				switch (state) {
@@ -167,7 +167,7 @@ namespace Toopher
 						}
 
 						try {
-							pairingStatus = api.Pair (pairingPhrase, userName);
+							pairing = api.Pair (pairingPhrase, userName);
 							state = STATE.POLL_FOR_PAIRING;
 							break;
 						} catch (RequestError err) {
@@ -176,8 +176,8 @@ namespace Toopher
 						break;
 					};
 					case STATE.POLL_FOR_PAIRING: {
-						pairingStatus = api.GetPairingStatus(pairingStatus.id);
-						if (pairingStatus.enabled) {
+						pairing = api.GetPairing(pairing.id);
+						if (pairing.enabled) {
 							Console.WriteLine ("Pairing complete");
 							state = STATE.AUTHENTICATE;
 						} else {

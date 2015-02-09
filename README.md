@@ -32,7 +32,7 @@ using Toopher;
 ToopherApi api = new ToopherApi("<your consumer key>", "<your consumer secret>");
 
 // Step 1 - Pair with their phone's Toopher app
-PairingStatus pairing = api.Pair("pairing phrase", "username@yourservice.com");
+Pairing pairing = api.Pair("pairing phrase", "username@yourservice.com");
 
 // Step 2 - Authenticate a log in
 AuthenticationStatus auth = api.Authenticate(pairing.id, "my computer");

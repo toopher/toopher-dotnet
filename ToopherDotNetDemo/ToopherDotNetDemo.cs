@@ -58,8 +58,8 @@ namespace Toopher
 				Console.WriteLine ("Sending pairing request...");
 
 				try {
-					var pairingStatus = api.Pair (pairingPhrase, userName);
-					pairingId = pairingStatus.id;
+					var pairing = api.Pair (pairingPhrase, userName);
+					pairingId = pairing.id;
 					break;
 				} catch (RequestError err) {
 					System.Console.WriteLine (String.Format ("The pairing phrase was not accepted (reason:{0})", err.Message));
@@ -72,8 +72,8 @@ namespace Toopher
 				Console.WriteLine ("Checking status of pairing request...");
 
 				try {
-					var pairingStatus = api.GetPairingStatus (pairingId);
-					if (pairingStatus.enabled) {
+					var pairing = api.GetPairing (pairingId);
+					if (pairing.enabled) {
 						Console.WriteLine ("Pairing complete");
 						break;
 					} else {
