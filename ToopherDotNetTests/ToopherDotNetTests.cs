@@ -105,16 +105,39 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void CreatePairingTest ()
+		public void CreatePairingWithPhraseTest ()
 		{
 			var api = getApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
-			Pairing pairing = api.Pair ("awkward turtle", "some user");
+			Pairing pairing = api.Pair ("some user", "awkward turtle");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["pairing_phrase"], "awkward turtle");
+			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some user");
 			Assert.AreEqual (pairing.id, "1");
 		}
 
+		[Test]
+		public void CreateSmsPairingTest ()
+		{
+			var api = getApi();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			Pairing pairing = api.Pair ("some user", "555-555-5555");
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (WebClientMock.LastRequestData["phone_number"], "555-555-5555");
+			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some user");
+			Assert.AreEqual (pairing.id, "1");
+		}
+
+		[Test]
+		public void CreateQrPairingTest ()
+		{
+			var api = getApi();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			Pairing pairing = api.Pair ("some user");
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some user");
+			Assert.AreEqual (pairing.id, "1");
+		}
 
 		[Test]
 		public void AuthenticateTest ()

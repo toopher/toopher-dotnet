@@ -8,6 +8,7 @@ using System.Runtime.Serialization;
 using SimpleJson;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Toopher
 {
@@ -51,17 +52,29 @@ namespace Toopher
 			}
 		}
 
-		// Pair your requester with a user's Toopher application
+		// Create an SMS pairing, QR pairing or regular pairing
 		//
-		// Must provide a pairing request (generated on their phone) and
-		// the user's name
-		public Pairing Pair (string pairingPhrase, string userName, Dictionary<string, string> extras = null)
+		// Must provide a username and phone number for an SMS pairing
+		// Must provide a username for a QR pairing
+		// Must provide a username and pairing phrase for a regular pairing
+		public Pairing Pair (string userName, string pairingPhraseOrNum = null, Dictionary<string, string> extras = null)
 		{
-			string endpoint = "pairings/create";
+			string endpoint;
 
 			NameValueCollection parameters = new NameValueCollection ();
-			parameters.Add ("pairing_phrase", pairingPhrase);
 			parameters.Add ("user_name", userName);
+
+			if (pairingPhraseOrNum != null) {
+				if (Regex.IsMatch(pairingPhraseOrNum, @"[0-9]")) {
+					parameters.Add("phone_number", pairingPhraseOrNum);
+					endpoint = "pairings/create/sms";
+				} else {
+					parameters.Add ("pairing_phrase", pairingPhraseOrNum);
+					endpoint = "pairings/create";
+				}
+			} else {
+				endpoint = "pairings/create/qr";
+			}
 
 			if (extras != null) {
 				foreach (KeyValuePair<string, string> kvp in extras) {
