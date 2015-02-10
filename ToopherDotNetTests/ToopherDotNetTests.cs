@@ -87,7 +87,6 @@ namespace ToopherDotNetTests
 		[Test()]
 		public void ToopherVersionTest ()
 		{
-			Assert.IsTrue(ToopherAPI.VERSION is string);
 			string[] strs = ToopherAPI.VERSION.Split('.');
 			int major = int.Parse(strs[0]);
 			int minor = int.Parse(strs[1]);
@@ -100,7 +99,7 @@ namespace ToopherDotNetTests
 		[Test()]
 		public void ToopherBaseUrlTest ()
 		{
-			Assert.IsTrue(ToopherAPI.DEFAULT_BASE_URL is string);
+			StringAssert.Contains ("https", ToopherAPI.DEFAULT_BASE_URL);
 			Assert.IsTrue(System.Uri.IsWellFormedUriString(ToopherAPI.DEFAULT_BASE_URL, System.UriKind.Absolute));
 		}
 
@@ -142,13 +141,14 @@ namespace ToopherDotNetTests
 		[Test]
 		public void AuthenticateWithPairingIdTest ()
 		{
-			string pairingId = Guid.NewGuid().ToString();
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":"" + pairingId + "", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
+			string pairingId = Guid.NewGuid().ToString();
+			WebClientMock.ReturnValue = @"{""id"":""" + pairingId + @""", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
 			AuthenticationRequest auth = api.Authenticate(pairingId, "test terminal");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["pairing_id"], pairingId);
 			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name"], "test terminal");
+			Assert.AreEqual (auth.id, pairingId);
 		}
 
 		[Test]
@@ -161,6 +161,7 @@ namespace ToopherDotNetTests
 			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some other user");
 			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name_extra"], "requester specified id");
 			Assert.AreEqual (WebClientMock.LastRequestData["random_key"], "42");
+			Assert.AreEqual (auth.id, "1");
 		}
 
 		[Test]
@@ -171,6 +172,7 @@ namespace ToopherDotNetTests
 			Pairing pairing = api.Pair ("awkward turtle", "some user", extras: new Dictionary<string,string>(){{"test_param", "42"}});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
+			Assert.AreEqual (pairing.id, "1");
 		}
 
 		[Test]
@@ -181,6 +183,7 @@ namespace ToopherDotNetTests
 			AuthenticationRequest auth = api.Authenticate ("1", "test terminal", extras: new Dictionary<string, string> () { { "test_param", "42" } });
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
+			Assert.AreEqual (auth.id, "1");
 		}
 
 		[Test]
@@ -286,6 +289,7 @@ namespace ToopherDotNetTests
 			AuthenticationRequest auth = api.GetAuthenticationRequest ("1", otp: "123456");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["otp"], "123456");
+			Assert.AreEqual (auth.id, "1");
 		}
 
 
