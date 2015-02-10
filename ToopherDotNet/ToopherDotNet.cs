@@ -108,7 +108,7 @@ namespace Toopher
 			NameValueCollection parameters = new NameValueCollection ();
 
 			try {
-				Guid pairingId = new Guid(pairingIdOrUsername);
+				new Guid(pairingIdOrUsername);
 				parameters.Add ("pairing_id", pairingIdOrUsername);
 				parameters.Add ("terminal_name", terminalNameOrTerminalNameExtra);
 			} catch (Exception e) {
