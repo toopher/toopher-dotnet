@@ -111,7 +111,7 @@ namespace Toopher
 				new Guid(pairingIdOrUsername);
 				parameters.Add ("pairing_id", pairingIdOrUsername);
 				parameters.Add ("terminal_name", terminalNameOrTerminalNameExtra);
-			} catch (Exception e) {
+			} catch (Exception) {
 				parameters.Add ("user_name", pairingIdOrUsername);
 				parameters.Add ("terminal_name_extra", terminalNameOrTerminalNameExtra);
 			}
