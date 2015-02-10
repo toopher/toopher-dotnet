@@ -15,10 +15,9 @@ namespace Toopher
 	public class ToopherAPI
 	{
 
-
-
 		public const string VERSION = "2.0.0";
 		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
+		public ToopherAPI.AdvancedApiUsageFactory advanced;
 
 		string consumerKey;
 		string consumerSecret;
@@ -38,6 +37,7 @@ namespace Toopher
 		/// <param name="webClientType">Override WebClient class for testing purposes</param>
 		public ToopherAPI (string consumerKey, string consumerSecret, string baseUrl = null, Type webClientProxyType = null)
 		{
+			this.advanced = new ToopherAPI.AdvancedApiUsageFactory(this);
 			this.consumerKey = consumerKey;
 			this.consumerSecret = consumerSecret;
 			if (baseUrl != null) {
@@ -319,9 +319,19 @@ namespace Toopher
 					throw new RequestError (errMessage);
 				}
 			}
+		}
 
+		public class AdvancedApiUsageFactory
+		{
+			private ToopherAPI api;
+
+			public AdvancedApiUsageFactory(ToopherAPI toopherApi)
+			{
+				this.api = toopherApi;
+			}
 		}
 	}
+
 
 	// Status information for a pairing request
 	public class Pairing

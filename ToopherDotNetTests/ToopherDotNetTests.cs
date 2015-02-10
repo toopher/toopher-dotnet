@@ -310,5 +310,12 @@ namespace ToopherDotNetTests
 			string pairingResetLink = api.GetPairingResetLink ("1");
 			Assert.AreEqual (pairingResetLink, "http://testonly/pairings/1/reset?reset_authorization=abcde");
 		}
+
+		[Test]
+		public void GenerateAdvancedApiUsageFactory ()
+		{
+			var api = getApi();
+			Assert.IsInstanceOf<ToopherAPI.AdvancedApiUsageFactory> (api.advanced);
+		}
 	}
 }
