@@ -17,7 +17,7 @@ namespace Toopher
 
 
 
-		public const string VERSION = "1.1.0";
+		public const string VERSION = "2.0.0";
 		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
 
 		string consumerKey;
