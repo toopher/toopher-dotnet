@@ -461,15 +461,31 @@ namespace ToopherDotNetTests
 		public void PairingRefreshFromServerTest ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}");
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":true, ""enabled"":false, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":true, ""enabled"":false, ""user"":{""id"":""1"",""name"":""userNameChanged"", ""toopher_authentication_enabled"":true}}";
 			Pairing pairing = new Pairing (response, api);
 			pairing.RefreshFromServer ();
 			Assert.IsInstanceOf<Pairing> (pairing);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (pairing.id, "1");
+			Assert.AreEqual (pairing.user.name, "userNameChanged");
 			Assert.IsFalse (pairing.enabled);
 			Assert.IsTrue (pairing.pending);
+		}
+
+		[Test]
+		public void UserRefreshFromServerTest ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":false}");
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userNameChanged"", ""toopher_authentication_enabled"":true}";
+			User user = new User (response, api);
+			user.RefreshFromServer ();
+			Assert.IsInstanceOf<User> (user);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual (user.id, "1");
+			Assert.AreEqual (user.name, "userNameChanged");
+			Assert.IsTrue (user.toopherAuthenticationEnabled);
 		}
 	}
 }

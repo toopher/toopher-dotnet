@@ -493,6 +493,7 @@ namespace Toopher
 			try {
 				this.pending = (bool)response["pending"];
 				this.enabled = (bool)response["enabled"];
+				this.user.Update ((JsonObject)response["user"]);
 			} catch (Exception ex) {
 				throw new RequestError ("Could not parse pairing from response", ex);
 			}
@@ -618,6 +619,26 @@ namespace Toopher
 				throw new RequestError ("Could not parse user from response", ex);
 			}
 		}
+
+		public void RefreshFromServer ()
+		{
+			string endpoint = string.Format ("users/{0}", id);
+			var json = api.advanced.raw.get(endpoint);
+			Update (json);
+		}
+
+		public void Update (IDictionary<string, object> response)
+		{
+			this.rawResponse = response;
+			try {
+				this.name = (string)response["name"];
+				this.toopherAuthenticationEnabled = (bool)response["toopher_authentication_enabled"];
+			} catch (Exception ex) {
+				throw new RequestError ("Could not parse user from response", ex);
+			}
+		}
+
+
 	}
 
 	public class UserTerminal
