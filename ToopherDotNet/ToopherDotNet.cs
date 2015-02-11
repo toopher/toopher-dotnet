@@ -433,27 +433,17 @@ namespace Toopher
 	// Status information for a pairing request
 	public class Pairing
 	{
-		private IDictionary<string, Object> _dict;
+		private IDictionary<string, Object> rawResponse;
 
 		public object this[string key]
 		{
 			get
 			{
-				return _dict[key];
+				return rawResponse[key];
 			}
 		}
 
 		public string id
-		{
-			get;
-			private set;
-		}
-		public string userId
-		{
-			get;
-			private set;
-		}
-		public string userName
 		{
 			get;
 			private set;
@@ -468,28 +458,26 @@ namespace Toopher
 			get;
 			private set;
 		}
+		public User user;
 
 		public override string ToString ()
 		{
-			return string.Format ("[Pairing: id={0}; userId={1}; userName={2}, enabled={3}, pending={4}]", id, userId, userName, enabled, pending);
+			return string.Format ("[Pairing: id={0}; enabled={1}; pending={2}; userId={3}; userName={4}; userToopherAuthenticationEnabled={5}]", id, enabled, pending, user.id, user.name, user.toopherAuthenticationEnabled);
 		}
 
-		public Pairing (IDictionary<string, object> _dict)
+		public Pairing (IDictionary<string, object> response)
 		{
+			this.rawResponse = response;
 			try {
-				this._dict = _dict;
-				this.id = (string)_dict["id"];
-				this.pending = (bool)_dict["pending"];
-				this.enabled = (bool)_dict["enabled"];
-
-				var user = (JsonObject)_dict["user"];
-				this.userId = (string)user["id"];
-				this.userName = (string)user["name"];
+				this.rawResponse = response;
+				this.id = (string)response["id"];
+				this.pending = (bool)response["pending"];
+				this.enabled = (bool)response["enabled"];
+				this.user = new User ((JsonObject)response["user"]);
 			} catch (Exception ex) {
 				throw new RequestError ("Could not parse pairing status from response", ex);
 			}
 		}
-
 	}
 
 	// Status information for an authentication request

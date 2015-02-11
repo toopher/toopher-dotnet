@@ -107,7 +107,7 @@ namespace ToopherDotNetTests
 		public void CreatePairingWithPhraseTest ()
 		{
 			var api = getApi();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
 			Pairing pairing = api.Pair ("some user", "awkward turtle");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["pairing_phrase"], "awkward turtle");
@@ -119,7 +119,7 @@ namespace ToopherDotNetTests
 		public void CreateSmsPairingTest ()
 		{
 			var api = getApi();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
 			Pairing pairing = api.Pair ("some user", "555-555-5555");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["phone_number"], "555-555-5555");
@@ -131,7 +131,7 @@ namespace ToopherDotNetTests
 		public void CreateQrPairingTest ()
 		{
 			var api = getApi();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
 			Pairing pairing = api.Pair ("some user");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some user");
@@ -168,7 +168,7 @@ namespace ToopherDotNetTests
 		public void ArbitraryParametersOnPairTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
 			Pairing pairing = api.Pair ("awkward turtle", "some user", extras: new Dictionary<string,string>(){{"test_param", "42"}});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
@@ -190,12 +190,12 @@ namespace ToopherDotNetTests
 		public void AccessArbitraryKeysInAdvancedPairingsGetByIdTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}, ""random_key"":""84""}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""random_key"":""84""}";
 			Pairing pairing = api.advanced.pairings.GetById  ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (pairing.id, "1");
-			Assert.AreEqual (pairing.userName, "some user");
-			Assert.AreEqual (pairing.userId, "1");
+			Assert.AreEqual (pairing.user.name, "some user");
+			Assert.AreEqual (pairing.user.id, "1");
 			Assert.IsTrue (pairing.enabled);
 			Assert.AreEqual (pairing["random_key"], "84");
 		}
@@ -310,13 +310,13 @@ namespace ToopherDotNetTests
 		public void AdvancedPairingsGetByIdTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
 			Pairing pairing = api.advanced.pairings.GetById ("1");
 			Assert.IsInstanceOf<Pairing> (pairing);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (pairing.id, "1");
-			Assert.AreEqual (pairing.userName, "some user");
-			Assert.AreEqual (pairing.userId, "1");
+			Assert.AreEqual (pairing.user.name, "some user");
+			Assert.AreEqual (pairing.user.id, "1");
 			Assert.IsTrue (pairing.enabled);
 		}
 
