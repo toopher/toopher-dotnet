@@ -241,7 +241,7 @@ namespace Toopher
 				{
 					string endpoint = string.Format ("users/{0}", userId);
 					var json = api.advanced.raw.get (endpoint);
-					return new User (json);
+					return new User (json, api);
 				}
 
 				public User GetByName (string userName)
@@ -271,7 +271,7 @@ namespace Toopher
 					}
 					parameters.Add ("name", userName);
 					var json = api.advanced.raw.post (endpoint, parameters);
-					return new User (json);
+					return new User (json, api);
 				}
 			}
 
@@ -474,7 +474,7 @@ namespace Toopher
 				this.id = (string)response["id"];
 				this.pending = (bool)response["pending"];
 				this.enabled = (bool)response["enabled"];
-				this.user = new User ((JsonObject)response["user"]);
+				this.user = new User ((JsonObject)response["user"], toopherApi);
 			} catch (Exception ex) {
 				throw new RequestError ("Could not parse pairing from response", ex);
 			}
@@ -574,12 +574,14 @@ namespace Toopher
 
 	public class User
 	{
-		private IDictionary<string, object> _dict;
+		private IDictionary<string, object> rawResponse;
+		private ToopherApi api;
+
 		public object this[string key]
 		{
 			get
 			{
-				return _dict[key];
+				return rawResponse[key];
 			}
 		}
 
@@ -604,13 +606,14 @@ namespace Toopher
 			return string.Format ("[User: id={0}; name={1}; toopherAuthenticationEnabled={2}]", id, name, toopherAuthenticationEnabled);
 		}
 
-		public User (IDictionary<string, object> _dict)
+		public User (IDictionary<string, object> response, ToopherApi toopherApi)
 		{
-			this._dict = _dict;
+			this.rawResponse = response;
+			this.api = toopherApi;
 			try {
-				this.id = (string)_dict["id"];
-				this.name = (string)_dict["name"];
-				this.toopherAuthenticationEnabled = (bool)_dict["toopher_authentication_enabled"];
+				this.id = (string)response["id"];
+				this.name = (string)response["name"];
+				this.toopherAuthenticationEnabled = (bool)response["toopher_authentication_enabled"];
 			} catch (Exception ex) {
 				throw new RequestError ("Could not parse user from response", ex);
 			}
