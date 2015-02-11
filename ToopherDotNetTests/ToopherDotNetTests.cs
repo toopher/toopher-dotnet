@@ -329,5 +329,12 @@ namespace ToopherDotNetTests
 			var api = getApi();
 			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.Pairings> (api.advanced.pairings);
 		}
+
+		[Test]
+		public void GenerateAdvancedRaw ()
+		{
+			var api = getApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.ApiRawRequester> (api.advanced.raw);
+		}
 	}
 }

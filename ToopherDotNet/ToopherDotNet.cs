@@ -82,7 +82,7 @@ namespace Toopher
 				}
 			}
 
-			var json = post (endpoint, parameters);
+			var json = advanced.raw.post (endpoint, parameters);
 			return new Pairing (json);
 		}
 
@@ -115,7 +115,7 @@ namespace Toopher
 				}
 			}
 
-			var json = post (endpoint, parameters);
+			var json = advanced.raw.post (endpoint, parameters);
 			return new AuthenticationRequest (json);
 		}
 
@@ -133,7 +133,7 @@ namespace Toopher
 			parameters["user_name"] = userName;
 			parameters["name"] = terminalName;
 			parameters["name_extra"] = terminalIdentifier;
-			post (endpoint, parameters);
+			advanced.raw.post (endpoint, parameters);
 		}
 
 		/// <summary>
@@ -150,7 +150,7 @@ namespace Toopher
 			NameValueCollection parameters = new NameValueCollection ();
 			parameters["user_name"] = userName;
 
-			JsonArray jArr = getArray (searchEndpoint, parameters);
+			JsonArray jArr = advanced.raw.getArray (searchEndpoint, parameters);
 			if (jArr.Count > 1) {
 				throw new RequestError ("Multiple users with name = " + userName);
 			}
@@ -163,7 +163,7 @@ namespace Toopher
 			string updateEndpoint = "users/" + userId;
 			parameters = new NameValueCollection ();
 			parameters["disable_toopher_auth"] = toopherEnabled ? "false" : "true";
-			post (updateEndpoint, parameters);
+			advanced.raw.post (updateEndpoint, parameters);
 		}
 
 		public string GetPairingResetLink (string pairingId, string securityQuestion = null, string securityAnswer = null)
@@ -173,130 +173,19 @@ namespace Toopher
 			parameters["security_question"] = securityQuestion;
 			parameters["security_answer"] = securityAnswer;
 
-			JsonObject pairingResetLink = post (endpoint, parameters);
+			JsonObject pairingResetLink = advanced.raw.post (endpoint, parameters);
 			return (string)pairingResetLink["url"];
-		}
-
-		private object request (string method, string endpoint, NameValueCollection parameters = null)
-		{
-			// Normalize method string
-			method = method.ToUpper ();
-
-			// Build an empty collection for parameters (if necessary)
-			if (parameters == null) {
-				parameters = new NameValueCollection ();
-			}
-
-			// can't have null parameters, or oauth signing will barf
-			foreach (String key in parameters.AllKeys){
-				if (parameters[key] == null) {
-					parameters[key] = "";
-				}
-			}
-
-			var client = OAuthRequest.ForRequestToken (this.consumerKey, this.consumerSecret);
-			client.RequestUrl = this.baseUrl + endpoint;
-			client.Method = method;
-
-			string auth = client.GetAuthorizationHeader (parameters);
-			// FIXME: OAuth library puts extraneous comma at end, workaround: remove it if present
-			auth = auth.TrimEnd (new char[] { ',' });
-
-			using (WebClientProxy wClient = (WebClientProxy)Activator.CreateInstance(webClientProxyType)) {
-				wClient.Headers.Add ("Authorization", auth);
-				wClient.Headers.Add ("User-Agent",
-					string.Format ("Toopher-DotNet/{0} (DotNet {1})", VERSION, Environment.Version.ToString ()));
-				if (parameters.Count > 0) {
-					wClient.QueryString = parameters;
-				}
-
-				string response;
-				try {
-					if (method.Equals ("POST")) {
-						var responseArray = wClient.UploadValues (client.RequestUrl, client.Method, parameters);
-						response = Encoding.UTF8.GetString (responseArray);
-					} else {
-						response = wClient.DownloadString (client.RequestUrl);
-					}
-				} catch (WebException wex) {
-					IHttpWebResponse httpResp = HttpWebResponseWrapper.create(wex.Response);
-					string error_message;
-					using (Stream stream = httpResp.GetResponseStream ()) {
-						StreamReader reader = new StreamReader (stream, Encoding.UTF8);
-						error_message = reader.ReadToEnd ();
-					}
-
-					String statusLine = httpResp.StatusCode.ToString () + " : " + httpResp.StatusDescription;
-
-					if (String.IsNullOrEmpty (error_message)) {
-						throw new RequestError (statusLine);
-					} else {
-
-						try {
-							// Attempt to parse JSON response
-							var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
-							parseRequestError (json);
-						} catch (RequestError e) {
-							throw e;
-						} catch (Exception) {
-							throw new RequestError (statusLine + " : " + error_message);
-						}
-					}
-
-					throw new RequestError (error_message, wex);
-				}
-			
-				try {
-					return SimpleJson.SimpleJson.DeserializeObject (response);
-				} catch (Exception ex) {
-					throw new RequestError ("Could not parse response", ex);
-				}
-			}
-
-		}
-
-		
-		private JsonObject get (string endpoint, NameValueCollection parameters = null)
-		{
-			return (JsonObject)request ("GET", endpoint, parameters);
-		}
-		private JsonArray getArray (string endpoint, NameValueCollection parameters = null)
-		{
-			return (JsonArray)request ("GET", endpoint, parameters);
-		}
-
-		private JsonObject post (string endpoint, NameValueCollection parameters = null)
-		{
-			return (JsonObject) request ("POST", endpoint, parameters);
-		}
-
-		private void parseRequestError (JsonObject err)
-		{
-			long errCode = (long)err["error_code"];
-			string errMessage = (string)err["error_message"];
-			if (errCode == UserDisabledError.ERROR_CODE) {
-				throw new UserDisabledError ();
-			} else if (errCode == UserUnknownError.ERROR_CODE) {
-				throw new UserUnknownError ();
-			} else if (errCode == TerminalUnknownError.ERROR_CODE) {
-				throw new TerminalUnknownError ();
-			} else {
-				if (errMessage.ToLower ().Contains ("pairing has been deactivated")
-					|| errMessage.ToLower ().Contains ("pairing has not been authorized")) {
-					throw new PairingDeactivatedError ();
-				} else {
-					throw new RequestError (errMessage);
-				}
-			}
 		}
 
 		public class AdvancedApiUsageFactory
 		{
 			public ToopherApi.AdvancedApiUsageFactory.Pairings pairings;
+			public ToopherApi.AdvancedApiUsageFactory.ApiRawRequester raw;
 
 			public AdvancedApiUsageFactory (ToopherApi toopherApi)
 			{
 				this.pairings = new ToopherApi.AdvancedApiUsageFactory.Pairings(toopherApi);
+				this.raw = new ToopherApi.AdvancedApiUsageFactory.ApiRawRequester(toopherApi);
 			}
 
 			public class Pairings
@@ -311,8 +200,130 @@ namespace Toopher
 				public Pairing GetById (string pairingId)
 				{
 					string endpoint = string.Format ("pairings/{0}", pairingId);
-					var json = api.get (endpoint);
+					var json = api.advanced.raw.get (endpoint);
 					return new Pairing (json);
+				}
+			}
+
+			public class ApiRawRequester
+			{
+				private ToopherApi api;
+
+				public ApiRawRequester (ToopherApi toopherApi)
+				{
+					this.api = toopherApi;
+				}
+
+				private object request (string method, string endpoint, NameValueCollection parameters = null)
+				{
+					// Normalize method string
+					method = method.ToUpper ();
+
+					// Build an empty collection for parameters (if necessary)
+					if (parameters == null) {
+						parameters = new NameValueCollection ();
+					}
+
+					// can't have null parameters, or oauth signing will barf
+					foreach (String key in parameters.AllKeys){
+						if (parameters[key] == null) {
+							parameters[key] = "";
+						}
+					}
+
+					var client = OAuthRequest.ForRequestToken (api.consumerKey, api.consumerSecret);
+					client.RequestUrl = api.baseUrl + endpoint;
+					client.Method = method;
+
+					string auth = client.GetAuthorizationHeader (parameters);
+					// FIXME: OAuth library puts extraneous comma at end, workaround: remove it if present
+					auth = auth.TrimEnd (new char[] { ',' });
+
+					using (WebClientProxy wClient = (WebClientProxy)Activator.CreateInstance(api.webClientProxyType)) {
+						wClient.Headers.Add ("Authorization", auth);
+						wClient.Headers.Add ("User-Agent",
+							string.Format ("Toopher-DotNet/{0} (DotNet {1})", VERSION, Environment.Version.ToString ()));
+						if (parameters.Count > 0) {
+							wClient.QueryString = parameters;
+						}
+
+						string response;
+						try {
+							if (method.Equals ("POST")) {
+								var responseArray = wClient.UploadValues (client.RequestUrl, client.Method, parameters);
+								response = Encoding.UTF8.GetString (responseArray);
+							} else {
+								response = wClient.DownloadString (client.RequestUrl);
+							}
+						} catch (WebException wex) {
+							IHttpWebResponse httpResp = HttpWebResponseWrapper.create(wex.Response);
+							string error_message;
+							using (Stream stream = httpResp.GetResponseStream ()) {
+								StreamReader reader = new StreamReader (stream, Encoding.UTF8);
+								error_message = reader.ReadToEnd ();
+							}
+
+							String statusLine = httpResp.StatusCode.ToString () + " : " + httpResp.StatusDescription;
+
+							if (String.IsNullOrEmpty (error_message)) {
+								throw new RequestError (statusLine);
+							} else {
+
+								try {
+									// Attempt to parse JSON response
+									var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject (error_message);
+									parseRequestError (json);
+								} catch (RequestError e) {
+									throw e;
+								} catch (Exception) {
+									throw new RequestError (statusLine + " : " + error_message);
+								}
+							}
+
+							throw new RequestError (error_message, wex);
+						}
+
+						try {
+							return SimpleJson.SimpleJson.DeserializeObject (response);
+						} catch (Exception ex) {
+							throw new RequestError ("Could not parse response", ex);
+						}
+					}
+				}
+
+				public JsonObject get (string endpoint, NameValueCollection parameters = null)
+				{
+					return (JsonObject)request ("GET", endpoint, parameters);
+				}
+
+				public JsonArray getArray (string endpoint, NameValueCollection parameters = null)
+				{
+					return (JsonArray)request ("GET", endpoint, parameters);
+				}
+
+				public JsonObject post (string endpoint, NameValueCollection parameters = null)
+				{
+					return (JsonObject) request ("POST", endpoint, parameters);
+				}
+
+				private void parseRequestError (JsonObject err)
+				{
+					long errCode = (long)err["error_code"];
+					string errMessage = (string)err["error_message"];
+					if (errCode == UserDisabledError.ERROR_CODE) {
+						throw new UserDisabledError ();
+					} else if (errCode == UserUnknownError.ERROR_CODE) {
+						throw new UserUnknownError ();
+					} else if (errCode == TerminalUnknownError.ERROR_CODE) {
+						throw new TerminalUnknownError ();
+					} else {
+						if (errMessage.ToLower ().Contains ("pairing has been deactivated")
+							|| errMessage.ToLower ().Contains ("pairing has not been authorized")) {
+							throw new PairingDeactivatedError ();
+						} else {
+							throw new RequestError (errMessage);
+						}
+					}
 				}
 			}
 		}
