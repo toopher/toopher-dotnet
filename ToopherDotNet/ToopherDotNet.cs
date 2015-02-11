@@ -710,6 +710,45 @@ namespace Toopher
 		}
 	}
 
+	public class Action
+	{
+		private IDictionary<string, object> rawResponse;
+		public object this[string key]
+		{
+			get
+			{
+				return rawResponse[key];
+			}
+		}
+
+		public string id
+		{
+			get;
+			private set;
+		}
+		public string name
+		{
+			get;
+			private set;
+		}
+
+		public override string ToString ()
+		{
+			return string.Format ("[Action: id={0}; name={1}]", id, name);
+		}
+
+		public Action (IDictionary<string, object> response)
+		{
+			this.rawResponse = response;
+			try {
+				this.id = (string)response["id"];
+				this.name = (string)response["name"];
+			} catch (Exception ex) {
+				throw new RequestError ("Could not parse action from response", ex);
+			}
+		}
+	}
+
 	// An exception class used to indicate an error in a request
 	public class RequestError : System.ApplicationException
 	{
