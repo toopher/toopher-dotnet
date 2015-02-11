@@ -288,7 +288,7 @@ namespace Toopher
 				{
 					string endpoint = string.Format ("user_terminals/{0}", userTerminalId);
 					var json = api.advanced.raw.get (endpoint);
-					return new UserTerminal (json);
+					return new UserTerminal (json, api);
 				}
 
 				public UserTerminal Create (string userName, string terminalName, string requesterSpecifiedId, NameValueCollection parameters = null)
@@ -301,7 +301,7 @@ namespace Toopher
 					parameters.Add ("terminal_name", terminalName);
 					parameters.Add ("requester_specified_id", requesterSpecifiedId);
 					var json = api.advanced.raw.post (endpoint, parameters);
-					return new UserTerminal (json);
+					return new UserTerminal (json, api);
 				}
 			}
 
@@ -619,12 +619,14 @@ namespace Toopher
 
 	public class UserTerminal
 	{
-		private IDictionary<string, object> _dict;
+		private IDictionary<string, object> rawResponse;
+		private ToopherApi api;
+
 		public object this[string key]
 		{
 			get
 			{
-				return _dict[key];
+				return rawResponse[key];
 			}
 		}
 
@@ -650,16 +652,17 @@ namespace Toopher
 			return string.Format ("[UserTerminal: id={0}; name={1}; requesterSpecifiedId={2}; userId={3}, userName={4}, userToopherAuthenticationEnabled={5}]", id, name, requesterSpecifiedId, user.id, user.name, user.toopherAuthenticationEnabled);
 		}
 
-		public UserTerminal (IDictionary<string, object> _dict)
+		public UserTerminal (IDictionary<string, object> response, ToopherApi toopherApi)
 		{
+			this.rawResponse = response;
+			this.api = toopherApi;
 			try {
-				this._dict = _dict;
-				this.id = (string)_dict["id"];
-				this.name = (string)_dict["name"];
-				this.requesterSpecifiedId = (string)_dict["requester_specified_id"];
-				this.user = new User ((JsonObject)_dict["user"]);
+				this.id = (string)response["id"];
+				this.name = (string)response["name"];
+				this.requesterSpecifiedId = (string)response["requester_specified_id"];
+				this.user = new User ((JsonObject)response["user"], toopherApi);
 			} catch (Exception ex) {
-				throw new RequestError ("Could not parse pairing status from response", ex);
+				throw new RequestError ("Could not parse user terminal from response", ex);
 			}
 		}
 	}
