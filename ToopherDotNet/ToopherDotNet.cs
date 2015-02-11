@@ -182,6 +182,7 @@ namespace Toopher
 			public ToopherApi.AdvancedApiUsageFactory.Pairings pairings;
 			public ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests authenticationRequests;
 			public ToopherApi.AdvancedApiUsageFactory.Users users;
+			public ToopherApi.AdvancedApiUsageFactory.UserTerminals userTerminals;
 			public ToopherApi.AdvancedApiUsageFactory.ApiRawRequester raw;
 
 			public AdvancedApiUsageFactory (ToopherApi toopherApi)
@@ -189,6 +190,7 @@ namespace Toopher
 				this.pairings = new ToopherApi.AdvancedApiUsageFactory.Pairings(toopherApi);
 				this.authenticationRequests = new ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests(toopherApi);
 				this.users = new ToopherApi.AdvancedApiUsageFactory.Users(toopherApi);
+				this.userTerminals = new ToopherApi.AdvancedApiUsageFactory.UserTerminals(toopherApi);
 				this.raw = new ToopherApi.AdvancedApiUsageFactory.ApiRawRequester(toopherApi);
 			}
 
@@ -251,6 +253,23 @@ namespace Toopher
 					parameters.Add ("name", userName);
 					var json = api.advanced.raw.post (endpoint, parameters);
 					return new User (json);
+				}
+			}
+
+			public class UserTerminals
+			{
+				private ToopherApi api;
+
+				public UserTerminals (ToopherApi toopherApi)
+				{
+					this.api = toopherApi;
+				}
+
+				public UserTerminal GetById (string userTerminalId)
+				{
+					string endpoint = string.Format ("user_terminals/{0}", userTerminalId);
+					var json = api.advanced.raw.get (endpoint);
+					return new UserTerminal (json);
 				}
 			}
 
@@ -555,6 +574,53 @@ namespace Toopher
 				this.toopherAuthenticationEnabled = (bool)_dict["toopher_authentication_enabled"];
 			} catch (Exception ex) {
 				throw new RequestError ("Could not parse user from response", ex);
+			}
+		}
+	}
+
+	public class UserTerminal
+	{
+		private IDictionary<string, object> _dict;
+		public object this[string key]
+		{
+			get
+			{
+				return _dict[key];
+			}
+		}
+
+		public string id
+		{
+			get;
+			private set;
+		}
+		public string name
+		{
+			get;
+			private set;
+		}
+		public string requesterSpecifiedId
+		{
+			get;
+			private set;
+		}
+		public User user;
+
+		public override string ToString ()
+		{
+			return string.Format ("[UserTerminal: id={0}; name={1}; requesterSpecifiedId={2}; userId={3}, userName={4}, userToopherAuthenticationEnabled={5}]", id, name, requesterSpecifiedId, user.id, user.name, user.toopherAuthenticationEnabled);
+		}
+
+		public UserTerminal (IDictionary<string, object> _dict)
+		{
+			try {
+				this._dict = _dict;
+				this.id = (string)_dict["id"];
+				this.name = (string)_dict["name"];
+				this.requesterSpecifiedId = (string)_dict["requester_specified_id"];
+				this.user = new User ((JsonObject)_dict["user"]);
+			} catch (Exception ex) {
+				throw new RequestError ("Could not parse pairing status from response", ex);
 			}
 		}
 	}

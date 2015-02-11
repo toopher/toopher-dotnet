@@ -363,6 +363,20 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void AdvancedUserTerminalsGetByIdTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}";
+			UserTerminal userTerminal = api.advanced.userTerminals.GetById ("1");
+			Assert.IsInstanceOf<UserTerminal> (userTerminal);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual (userTerminal.id, "1");
+			Assert.AreEqual (userTerminal.name, "userTerminalName");
+			Assert.AreEqual (userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.IsInstanceOf<User> (userTerminal.user);
+		}
+
+		[Test]
 		public void GeneratePairingLinkTest ()
 		{
 			var api = getApi ();
@@ -404,6 +418,13 @@ namespace ToopherDotNetTests
 		{
 			var api = getApi();
 			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.Users> (api.advanced.users);
+		}
+
+		[Test]
+		public void GenerateAdvancedUserTerminals ()
+		{
+			var api = getApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.UserTerminals> (api.advanced.userTerminals);
 		}
 	}
 }
