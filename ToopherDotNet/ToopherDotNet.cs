@@ -323,12 +323,25 @@ namespace Toopher
 
 		public class AdvancedApiUsageFactory
 		{
-			private ToopherApi api;
+			public ToopherApi.AdvancedApiUsageFactory.Pairings pairings;
 
-			public AdvancedApiUsageFactory(ToopherApi toopherApi)
+			public AdvancedApiUsageFactory (ToopherApi toopherApi)
 			{
-				this.api = toopherApi;
+				this.pairings = new ToopherApi.AdvancedApiUsageFactory.Pairings(toopherApi);
 			}
+
+			public class Pairings
+			{
+				private ToopherApi api;
+
+				public Pairings (ToopherApi toopherApi)
+				{
+					this.api = toopherApi;
+				}
+
+			}
+
+
 		}
 	}
 
