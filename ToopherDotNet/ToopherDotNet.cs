@@ -434,6 +434,7 @@ namespace Toopher
 	public class Pairing
 	{
 		private IDictionary<string, Object> rawResponse;
+		private ToopherApi api;
 
 		public object this[string key]
 		{
@@ -459,7 +460,6 @@ namespace Toopher
 			private set;
 		}
 		public User user;
-		public ToopherApi api;
 
 		public override string ToString ()
 		{
@@ -469,17 +469,32 @@ namespace Toopher
 		public Pairing (IDictionary<string, object> response, ToopherApi toopherApi)
 		{
 			this.rawResponse = response;
+			this.api = toopherApi;
 			try {
 				this.id = (string)response["id"];
 				this.pending = (bool)response["pending"];
 				this.enabled = (bool)response["enabled"];
 				this.user = new User ((JsonObject)response["user"]);
-				this.api = toopherApi;
 			} catch (Exception ex) {
 				throw new RequestError ("Could not parse pairing from response", ex);
 			}
 		}
 
+		public void RefreshFromServer ()
+		{
+			string endpoint = string.Format ("pairings/{0}", id);
+			var json = api.advanced.raw.get (endpoint);
+			Update (json);
+		}
+
+		private void Update (IDictionary<string, object> response)
+		{
+			this.rawResponse = response;
+			try {
+				this.pending = (bool)response["pending"];
+				this.enabled = (bool)response["enabled"];
+			} catch (Exception ex) {
+				throw new RequestError ("Could not parse pairing from response", ex);
 			}
 		}
 	}

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using Toopher;
 using NUnit.Framework;
+using SimpleJson;
 
 namespace ToopherDotNetTests
 {
@@ -454,6 +455,21 @@ namespace ToopherDotNetTests
 		{
 			var api = getApi();
 			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.UserTerminals> (api.advanced.userTerminals);
+		}
+
+		[Test]
+		public void PairingRefreshFromServerTest ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}");
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":true, ""enabled"":false, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
+			Pairing pairing = new Pairing (response, api);
+			pairing.RefreshFromServer ();
+			Assert.IsInstanceOf<Pairing> (pairing);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual (pairing.id, "1");
+			Assert.IsFalse (pairing.enabled);
+			Assert.IsTrue (pairing.pending);
 		}
 	}
 }
