@@ -244,6 +244,25 @@ namespace Toopher
 					return new User (json);
 				}
 
+				public User GetByName (string userName)
+				{
+					string endpoint = "users";
+					NameValueCollection parameters = new NameValueCollection ();
+					parameters.Add ("name", userName);
+					JsonArray json = api.advanced.raw.getArray (endpoint, parameters);
+
+					if (json.Count() > 1) {
+						throw new RequestError (string.Format ("More than one user with name {0}", userName));
+					}
+					if (json.Count() == 0) {
+						throw new RequestError (string.Format ("No users with name {0}", userName));
+					}
+					Console.WriteLine (json);
+					var user = (JsonObject)json[0];
+					string userId = user["id"].ToString ();
+					return GetById (userId);
+				}
+
 				public User Create (string userName, NameValueCollection parameters = null)
 				{
 					string endpoint = "users/create";
