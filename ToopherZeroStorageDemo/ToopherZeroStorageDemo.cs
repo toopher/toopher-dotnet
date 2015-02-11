@@ -9,7 +9,7 @@ namespace Toopher
 		public const string DEFAULT_USERNAME = "demo@toopher.com";
 		public const string DEFAULT_TERMINAL_NAME = "my computer";
 
-		public static ToopherAPI api;
+		public static ToopherApi api;
 		static Random random = new Random (DateTime.Now.Millisecond);
 
 		enum STATE
@@ -57,7 +57,7 @@ namespace Toopher
 			}
 			string baseUrl = System.Environment.GetEnvironmentVariable ("TOOPHER_BASE_URL");
 
-			api = new Toopher.ToopherAPI (consumerKey, consumerSecret, baseUrl);
+			api = new Toopher.ToopherApi (consumerKey, consumerSecret, baseUrl);
 
 			Console.Write(String.Format("Enter a username to authenticate with Toopher [{0}]: ", DEFAULT_USERNAME));
 			string userName = Console.ReadLine ();

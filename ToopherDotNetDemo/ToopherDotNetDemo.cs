@@ -8,7 +8,7 @@ namespace Toopher
 		public const string DEFAULT_USERNAME = "demo@toopher.com";
 		public const string DEFAULT_TERMINAL_NAME = "my computer";
 
-		public static ToopherAPI api;
+		public static ToopherApi api;
 
 		public static void Main (string[] args)
 		{
@@ -30,7 +30,7 @@ namespace Toopher
 			}
 			string baseUrl = System.Environment.GetEnvironmentVariable ("TOOPHER_BASE_URL");
 
-			api = new Toopher.ToopherAPI (consumerKey, consumerSecret, baseUrl);
+			api = new Toopher.ToopherApi (consumerKey, consumerSecret, baseUrl);
 
 			string pairingId;
 			while (true) {

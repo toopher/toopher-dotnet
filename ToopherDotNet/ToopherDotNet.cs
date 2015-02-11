@@ -12,38 +12,38 @@ using System.Text.RegularExpressions;
 
 namespace Toopher
 {
-	public class ToopherAPI
+	public class ToopherApi
 	{
 
 		public const string VERSION = "2.0.0";
 		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
-		public ToopherAPI.AdvancedApiUsageFactory advanced;
+		public ToopherApi.AdvancedApiUsageFactory advanced;
 
 		string consumerKey;
 		string consumerSecret;
 		string baseUrl;
 		Type webClientProxyType;
 
-		// Create the ToopherAPI object tied to your requester credentials
-		// 
+		// Create the ToopherApi object tied to your requester credentials
+		//
 		// Credentials are available on https://dev.toopher.com
 		/// <summary>
-		/// Create a new instance of the ToopherAPI client tied to your requester
+		/// Create a new instance of the ToopherApi client tied to your requester
 		/// credentials.  Credentials are available at https://dev.toopher.com
 		/// </summary>
 		/// <param name="consumerKey">OAuth Consumer Key</param>
 		/// <param name="consumerSecret">OAuth Consumer Secret</param>
-		/// <param name="baseUrl">Override url for ToopherAPI webservice (default=https://api.toopher.com/v1/) </param>
+		/// <param name="baseUrl">Override url for ToopherApi webservice (default=https://api.toopher.com/v1/) </param>
 		/// <param name="webClientType">Override WebClient class for testing purposes</param>
-		public ToopherAPI (string consumerKey, string consumerSecret, string baseUrl = null, Type webClientProxyType = null)
+		public ToopherApi (string consumerKey, string consumerSecret, string baseUrl = null, Type webClientProxyType = null)
 		{
-			this.advanced = new ToopherAPI.AdvancedApiUsageFactory(this);
+			this.advanced = new ToopherApi.AdvancedApiUsageFactory(this);
 			this.consumerKey = consumerKey;
 			this.consumerSecret = consumerSecret;
 			if (baseUrl != null) {
 				this.baseUrl = baseUrl;
 			} else {
-				this.baseUrl = ToopherAPI.DEFAULT_BASE_URL;
+				this.baseUrl = ToopherApi.DEFAULT_BASE_URL;
 			}
 			if (webClientProxyType != null) {
 				this.webClientProxyType = webClientProxyType;
@@ -323,9 +323,9 @@ namespace Toopher
 
 		public class AdvancedApiUsageFactory
 		{
-			private ToopherAPI api;
+			private ToopherApi api;
 
-			public AdvancedApiUsageFactory(ToopherAPI toopherApi)
+			public AdvancedApiUsageFactory(ToopherApi toopherApi)
 			{
 				this.api = toopherApi;
 			}

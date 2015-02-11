@@ -79,15 +79,15 @@ namespace ToopherDotNetTests
 			WebClientMock.LastRequestData = null;
 		}
 
-		private ToopherAPI getApi ()
+		private ToopherApi getApi ()
 		{
-			return new ToopherAPI ("key", "secret", null, typeof (WebClientMock));
+			return new ToopherApi ("key", "secret", null, typeof (WebClientMock));
 		}
 
 		[Test()]
 		public void ToopherVersionTest ()
 		{
-			string[] strs = ToopherAPI.VERSION.Split('.');
+			string[] strs = ToopherApi.VERSION.Split('.');
 			int major = int.Parse(strs[0]);
 			int minor = int.Parse(strs[1]);
 			int patchLevel = int.Parse(strs[2]);
@@ -99,8 +99,8 @@ namespace ToopherDotNetTests
 		[Test()]
 		public void ToopherBaseUrlTest ()
 		{
-			StringAssert.Contains ("https", ToopherAPI.DEFAULT_BASE_URL);
-			Assert.IsTrue(System.Uri.IsWellFormedUriString(ToopherAPI.DEFAULT_BASE_URL, System.UriKind.Absolute));
+			StringAssert.Contains ("https", ToopherApi.DEFAULT_BASE_URL);
+			Assert.IsTrue(System.Uri.IsWellFormedUriString(ToopherApi.DEFAULT_BASE_URL, System.UriKind.Absolute));
 		}
 
 		[Test]
@@ -319,7 +319,7 @@ namespace ToopherDotNetTests
 		public void GenerateAdvancedApiUsageFactory ()
 		{
 			var api = getApi();
-			Assert.IsInstanceOf<ToopherAPI.AdvancedApiUsageFactory> (api.advanced);
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory> (api.advanced);
 		}
 	}
 }

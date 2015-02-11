@@ -1,4 +1,4 @@
-# ToopherAPI DotNet Client
+# ToopherApi DotNet Client
 
 #### .NET Framework Version
 >=4.5
