@@ -487,5 +487,21 @@ namespace ToopherDotNetTests
 			Assert.AreEqual (user.name, "userNameChanged");
 			Assert.IsTrue (user.toopherAuthenticationEnabled);
 		}
+
+		[Test]
+		public void UserTerminalRefreshFromServerTest ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}");
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalNameChanged"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userNameChanged"", ""toopher_authentication_enabled"":false}}";
+			UserTerminal userTerminal = new UserTerminal (response, api);
+			userTerminal.RefreshFromServer ();
+			Assert.IsInstanceOf<UserTerminal> (userTerminal);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual (userTerminal.id, "1");
+			Assert.AreEqual (userTerminal.name, "userTerminalNameChanged");
+			Assert.AreEqual (userTerminal.user.name, "userNameChanged");
+			Assert.IsFalse (userTerminal.user.toopherAuthenticationEnabled);
+		}
 	}
 }

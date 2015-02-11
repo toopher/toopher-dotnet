@@ -689,6 +689,25 @@ namespace Toopher
 				throw new RequestError ("Could not parse user terminal from response", ex);
 			}
 		}
+
+		public void RefreshFromServer ()
+		{
+			string endpoint = string.Format ("user_terminals/{0}", id);
+			var json = api.advanced.raw.get (endpoint);
+			Update (json);
+		}
+
+		public void Update (IDictionary<string, object> response)
+		{
+			this.rawResponse = response;
+			try {
+				this.name = (string)response["name"];
+				this.requesterSpecifiedId = (string)response["requester_specified_id"];
+				this.user.Update ((JsonObject)response["user"]);
+			} catch (Exception ex) {
+				throw new RequestError ("Could not parse user terminal from response", ex);
+			}
+		}
 	}
 
 	// An exception class used to indicate an error in a request
