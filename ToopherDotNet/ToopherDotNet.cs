@@ -241,6 +241,17 @@ namespace Toopher
 					var json = api.advanced.raw.get (endpoint);
 					return new User (json);
 				}
+
+				public User Create (string userName, NameValueCollection parameters = null)
+				{
+					string endpoint = "users/create";
+					if (parameters == null) {
+						parameters = new NameValueCollection ();
+					}
+					parameters.Add ("name", userName);
+					var json = api.advanced.raw.post (endpoint, parameters);
+					return new User (json);
+				}
 			}
 
 			public class ApiRawRequester

@@ -334,6 +334,35 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void AdvancedUsersCreateTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}";
+			User user = api.advanced.users.Create ("username");
+			Assert.IsInstanceOf<User> (user);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (user.id, "1");
+			Assert.AreEqual (user.name, "username");
+			Assert.IsTrue (user.toopherAuthenticationEnabled);
+		}
+
+		[Test]
+		public void AdvancedUsersCreateWithParamsTest ()
+		{
+			var api = getApi();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}";
+			NameValueCollection parameters = new NameValueCollection();
+			parameters.Add ("foo", "bar");
+			User user = api.advanced.users.Create ("username", parameters);
+			Assert.IsInstanceOf<User> (user);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (WebClientMock.LastRequestData["foo"], "bar");
+			Assert.AreEqual (user.id, "1");
+			Assert.AreEqual (user.name, "username");
+			Assert.IsTrue (user.toopherAuthenticationEnabled);
+		}
+
+		[Test]
 		public void GeneratePairingLinkTest ()
 		{
 			var api = getApi ();
