@@ -180,11 +180,13 @@ namespace Toopher
 		public class AdvancedApiUsageFactory
 		{
 			public ToopherApi.AdvancedApiUsageFactory.Pairings pairings;
+			public ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests authenticationRequests;
 			public ToopherApi.AdvancedApiUsageFactory.ApiRawRequester raw;
 
 			public AdvancedApiUsageFactory (ToopherApi toopherApi)
 			{
 				this.pairings = new ToopherApi.AdvancedApiUsageFactory.Pairings(toopherApi);
+				this.authenticationRequests = new ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests(toopherApi);
 				this.raw = new ToopherApi.AdvancedApiUsageFactory.ApiRawRequester(toopherApi);
 			}
 
@@ -202,6 +204,23 @@ namespace Toopher
 					string endpoint = string.Format ("pairings/{0}", pairingId);
 					var json = api.advanced.raw.get (endpoint);
 					return new Pairing (json);
+				}
+			}
+
+			public class AuthenticationRequests
+			{
+				private ToopherApi api;
+
+				public AuthenticationRequests (ToopherApi toopherApi)
+				{
+					this.api = toopherApi;
+				}
+
+				public AuthenticationRequest GetById (string authenticationRequestId)
+				{
+					string endpoint = string.Format ("authentication_requests/{0}", authenticationRequestId);
+					var json = api.advanced.raw.get (endpoint);
+					return new AuthenticationRequest (json);
 				}
 			}
 

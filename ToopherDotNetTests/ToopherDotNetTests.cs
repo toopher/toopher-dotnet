@@ -201,11 +201,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void AccessArbitraryKeysInAuthenticationRequestTest ()
+		public void AccessArbitraryKeysInAdvancedAuthenticationRequestsGetByIdTest ()
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}, ""random_key"":""84""}";
-			AuthenticationRequest auth = api.GetAuthenticationRequest ("1");
+			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (auth.id, "1");
 			Assert.IsFalse (auth.pending);
@@ -267,11 +267,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void GetAuthenticationRequestTest ()
+		public void AdvancedAuthenticationRequestsGetByIdTest ()
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationRequest auth = api.GetAuthenticationRequest ("1");
+			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (auth.id, "1");
 			Assert.IsFalse (auth.pending);
@@ -335,6 +335,13 @@ namespace ToopherDotNetTests
 		{
 			var api = getApi();
 			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.ApiRawRequester> (api.advanced.raw);
+		}
+
+		[Test]
+		public void GenerateAdvancedAuthenticationRequests ()
+		{
+			var api = getApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests> (api.advanced.authenticationRequests);
 		}
 	}
 }
