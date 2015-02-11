@@ -86,17 +86,6 @@ namespace Toopher
 			return new Pairing (json);
 		}
 
-		// Check on status of a pairing request
-		// 
-		// Must provide the ID returned when the pairing request was initiated
-		public Pairing GetPairing (string pairingRequestId)
-		{
-			string endpoint = String.Format ("pairings/{0}", pairingRequestId);
-
-			var json = get (endpoint);
-			return new Pairing (json);
-		}
-
 		// Initiate an authentication request by pairing id or username
 		//
 		// Provide pairing ID or username, a name for the terminal (displayed to user) or requester-specified ID,
@@ -127,26 +116,6 @@ namespace Toopher
 			}
 
 			var json = post (endpoint, parameters);
-			return new AuthenticationRequest (json);
-		}
-
-		// Check on status of authentication request
-		//
-		// Provide authentication request ID returned when authentication request was
-		// started.
-		public AuthenticationRequest GetAuthenticationRequest (string authenticationRequestId, string otp = null)
-		{
-			string endpoint = String.Format ("authentication_requests/{0}", authenticationRequestId);
-
-			JsonObject json;
-			if (String.IsNullOrEmpty (otp)) {
-				json = get (endpoint);
-				return new AuthenticationRequest (json);
-			} else {
-				NameValueCollection parameters = new NameValueCollection ();
-				parameters["otp"] = otp;
-				json = post (endpoint + "/otp_auth", parameters);
-			}
 			return new AuthenticationRequest (json);
 		}
 
