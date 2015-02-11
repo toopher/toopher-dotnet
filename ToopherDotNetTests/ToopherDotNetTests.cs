@@ -187,11 +187,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void AccessArbitraryKeysInPairingTest ()
+		public void AccessArbitraryKeysInAdvancedPairingsGetByIdTest ()
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}, ""random_key"":""84""}";
-			Pairing pairing = api.GetPairing  ("1");
+			Pairing pairing = api.advanced.pairings.GetById  ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (pairing.id, "1");
 			Assert.AreEqual (pairing.userName, "some user");
@@ -294,11 +294,12 @@ namespace ToopherDotNetTests
 
 
 		[Test]
-		public void PairingTest ()
+		public void AdvancedPairingsGetByIdTest ()
 		{
 			var api = getApi ();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user""}}";
-			Pairing pairing = api.GetPairing ("1");
+			Pairing pairing = api.advanced.pairings.GetById ("1");
+			Assert.IsInstanceOf<Pairing> (pairing);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (pairing.id, "1");
 			Assert.AreEqual (pairing.userName, "some user");

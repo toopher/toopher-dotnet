@@ -176,7 +176,7 @@ namespace Toopher
 						break;
 					};
 					case STATE.POLL_FOR_PAIRING: {
-						pairing = api.GetPairing(pairing.id);
+						pairing = api.advanced.pairings.GetById (pairing.id);
 						if (pairing.enabled) {
 							Console.WriteLine ("Pairing complete");
 							state = STATE.AUTHENTICATE;

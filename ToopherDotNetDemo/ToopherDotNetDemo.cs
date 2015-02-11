@@ -72,7 +72,7 @@ namespace Toopher
 				Console.WriteLine ("Checking status of pairing request...");
 
 				try {
-					var pairing = api.GetPairing (pairingId);
+					var pairing = api.advanced.pairings.GetById (pairingId);
 					if (pairing.enabled) {
 						Console.WriteLine ("Pairing complete");
 						break;

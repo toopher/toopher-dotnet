@@ -339,9 +339,13 @@ namespace Toopher
 					this.api = toopherApi;
 				}
 
+				public Pairing GetById (string pairingId)
+				{
+					string endpoint = string.Format ("pairings/{0}", pairingId);
+					var json = api.get (endpoint);
+					return new Pairing (json);
+				}
 			}
-
-
 		}
 	}
 
