@@ -271,6 +271,19 @@ namespace Toopher
 					var json = api.advanced.raw.get (endpoint);
 					return new UserTerminal (json);
 				}
+
+				public UserTerminal Create (string userName, string terminalName, string requesterSpecifiedId, NameValueCollection parameters = null)
+				{
+					string endpoint = "user_terminals/create";
+					if (parameters == null) {
+						parameters = new NameValueCollection ();
+					}
+					parameters.Add ("user_name", userName);
+					parameters.Add ("terminal_name", terminalName);
+					parameters.Add ("requester_specified_id", requesterSpecifiedId);
+					var json = api.advanced.raw.post (endpoint, parameters);
+					return new UserTerminal (json);
+				}
 			}
 
 			public class ApiRawRequester

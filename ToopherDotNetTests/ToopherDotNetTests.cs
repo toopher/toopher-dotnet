@@ -377,6 +377,35 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void AdvancedUserTerminalsCreateTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}";
+			UserTerminal userTerminal = api.advanced.userTerminals.Create ("userName", "userTerminalName", "requesterSpecifiedId");
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (userTerminal.id, "1");
+			Assert.AreEqual (userTerminal.name, "userTerminalName");
+			Assert.AreEqual (userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.IsInstanceOf<User> (userTerminal.user);
+		}
+
+		[Test]
+		public void AdvancedUserTerminalsCreateWithParamsTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}";
+			NameValueCollection parameters = new NameValueCollection();
+			parameters.Add ("foo", "bar");
+			UserTerminal userTerminal = api.advanced.userTerminals.Create ("userName", "userTerminalName", "requesterSpecifiedId", parameters);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (WebClientMock.LastRequestData["foo"], "bar");
+			Assert.AreEqual (userTerminal.id, "1");
+			Assert.AreEqual (userTerminal.name, "userTerminalName");
+			Assert.AreEqual (userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.IsInstanceOf<User> (userTerminal.user);
+		}
+
+		[Test]
 		public void GeneratePairingLinkTest ()
 		{
 			var api = getApi ();
