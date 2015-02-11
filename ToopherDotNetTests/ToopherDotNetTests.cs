@@ -217,6 +217,19 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void AccessArbitraryKeysInAdvancedUsersGetByIdTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true, ""random_key"":""84""}";
+			User user = api.advanced.users.GetById  ("1");
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual (user.id, "1");
+			Assert.AreEqual (user.name, "username");
+			Assert.IsTrue (user.toopherAuthenticationEnabled);
+			Assert.AreEqual (user["random_key"], "84");
+		}
+
+		[Test]
 		[ExpectedException(typeof(UserDisabledError))]
 		public void DisabledUserRaisesCorrectErrorTest ()
 		{
@@ -308,6 +321,19 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void AdvancedUsersGetByIdTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}";
+			User user = api.advanced.users.GetById ("1");
+			Assert.IsInstanceOf<User> (user);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual (user.id, "1");
+			Assert.AreEqual (user.name, "username");
+			Assert.IsTrue (user.toopherAuthenticationEnabled);
+		}
+
+		[Test]
 		public void GeneratePairingLinkTest ()
 		{
 			var api = getApi ();
@@ -342,6 +368,13 @@ namespace ToopherDotNetTests
 		{
 			var api = getApi();
 			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests> (api.advanced.authenticationRequests);
+		}
+
+		[Test]
+		public void GenerateAdvancedUsers ()
+		{
+			var api = getApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.Users> (api.advanced.users);
 		}
 	}
 }

@@ -181,12 +181,14 @@ namespace Toopher
 		{
 			public ToopherApi.AdvancedApiUsageFactory.Pairings pairings;
 			public ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests authenticationRequests;
+			public ToopherApi.AdvancedApiUsageFactory.Users users;
 			public ToopherApi.AdvancedApiUsageFactory.ApiRawRequester raw;
 
 			public AdvancedApiUsageFactory (ToopherApi toopherApi)
 			{
 				this.pairings = new ToopherApi.AdvancedApiUsageFactory.Pairings(toopherApi);
 				this.authenticationRequests = new ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests(toopherApi);
+				this.users = new ToopherApi.AdvancedApiUsageFactory.Users(toopherApi);
 				this.raw = new ToopherApi.AdvancedApiUsageFactory.ApiRawRequester(toopherApi);
 			}
 
@@ -221,6 +223,23 @@ namespace Toopher
 					string endpoint = string.Format ("authentication_requests/{0}", authenticationRequestId);
 					var json = api.advanced.raw.get (endpoint);
 					return new AuthenticationRequest (json);
+				}
+			}
+
+			public class Users
+			{
+				private ToopherApi api;
+
+				public Users (ToopherApi toopherApi)
+				{
+					this.api = toopherApi;
+				}
+
+				public User GetById (string userId)
+				{
+					string endpoint = string.Format ("users/{0}", userId);
+					var json = api.advanced.raw.get (endpoint);
+					return new User (json);
 				}
 			}
 
@@ -480,6 +499,51 @@ namespace Toopher
 				terminalName = (string)terminal["name"];
 			} catch (Exception ex) {
 				throw new RequestError ("Could not parse authentication status from response", ex);
+			}
+		}
+	}
+
+	public class User
+	{
+		private IDictionary<string, object> _dict;
+		public object this[string key]
+		{
+			get
+			{
+				return _dict[key];
+			}
+		}
+
+		public string id
+		{
+			get;
+			private set;
+		}
+		public string name
+		{
+			get;
+			private set;
+		}
+		public bool toopherAuthenticationEnabled
+		{
+			get;
+			private set;
+		}
+
+		public override string ToString ()
+		{
+			return string.Format ("[User: id={0}; name={1}; toopherAuthenticationEnabled={2}]", id, name, toopherAuthenticationEnabled);
+		}
+
+		public User (IDictionary<string, object> _dict)
+		{
+			this._dict = _dict;
+			try {
+				this.id = (string)_dict["id"];
+				this.name = (string)_dict["name"];
+				this.toopherAuthenticationEnabled = (bool)_dict["toopher_authentication_enabled"];
+			} catch (Exception ex) {
+				throw new RequestError ("Could not parse user from response", ex);
 			}
 		}
 	}
