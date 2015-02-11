@@ -83,7 +83,7 @@ namespace Toopher
 			}
 
 			var json = advanced.raw.post (endpoint, parameters);
-			return new Pairing (json);
+			return new Pairing (json, this);
 		}
 
 		// Initiate an authentication request by pairing id or username
@@ -207,7 +207,7 @@ namespace Toopher
 				{
 					string endpoint = string.Format ("pairings/{0}", pairingId);
 					var json = api.advanced.raw.get (endpoint);
-					return new Pairing (json);
+					return new Pairing (json, api);
 				}
 			}
 
@@ -459,23 +459,27 @@ namespace Toopher
 			private set;
 		}
 		public User user;
+		public ToopherApi api;
 
 		public override string ToString ()
 		{
 			return string.Format ("[Pairing: id={0}; enabled={1}; pending={2}; userId={3}; userName={4}; userToopherAuthenticationEnabled={5}]", id, enabled, pending, user.id, user.name, user.toopherAuthenticationEnabled);
 		}
 
-		public Pairing (IDictionary<string, object> response)
+		public Pairing (IDictionary<string, object> response, ToopherApi toopherApi)
 		{
 			this.rawResponse = response;
 			try {
-				this.rawResponse = response;
 				this.id = (string)response["id"];
 				this.pending = (bool)response["pending"];
 				this.enabled = (bool)response["enabled"];
 				this.user = new User ((JsonObject)response["user"]);
+				this.api = toopherApi;
 			} catch (Exception ex) {
-				throw new RequestError ("Could not parse pairing status from response", ex);
+				throw new RequestError ("Could not parse pairing from response", ex);
+			}
+		}
+
 			}
 		}
 	}
