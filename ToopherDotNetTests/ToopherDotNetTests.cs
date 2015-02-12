@@ -144,7 +144,7 @@ namespace ToopherDotNetTests
 		{
 			var api = getApi ();
 			string pairingId = Guid.NewGuid().ToString();
-			WebClientMock.ReturnValue = @"{""id"":""" + pairingId + @""", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
+			WebClientMock.ReturnValue = @"{""id"":""" + pairingId + @""", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"",""requester_specified_id"":""requesterSpecifiedId"",""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
 			AuthenticationRequest auth = api.Authenticate(pairingId, "test terminal");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["pairing_id"], pairingId);
@@ -156,7 +156,7 @@ namespace ToopherDotNetTests
 		public void AuthenticateWithUsernameAndExtrasTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
 			AuthenticationRequest auth = api.Authenticate ("some other user", "requester specified id", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some other user");
@@ -180,7 +180,7 @@ namespace ToopherDotNetTests
 		public void ArbitraryParamtersOnAuthenticateTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1,""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
 			AuthenticationRequest auth = api.Authenticate ("1", "test terminal", extras: new Dictionary<string, string> () { { "test_param", "42" } });
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
@@ -205,15 +205,15 @@ namespace ToopherDotNetTests
 		public void AccessArbitraryKeysInAdvancedAuthenticationRequestsGetByIdTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}, ""random_key"":""84""}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}, ""random_key"":""84""}";
 			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (auth.id, "1");
 			Assert.IsFalse (auth.pending);
 			Assert.IsTrue (auth.granted);
 			Assert.AreEqual (auth.reason, "its a test");
-			Assert.AreEqual (auth.terminalId, "1");
-			Assert.AreEqual (auth.terminalName, "test terminal");
+			Assert.AreEqual (auth.terminal.id, "1");
+			Assert.AreEqual (auth.terminal.name, "test terminal");
 			Assert.AreEqual (auth["random_key"], "84");
 		}
 
@@ -284,15 +284,15 @@ namespace ToopherDotNetTests
 		public void AdvancedAuthenticationRequestsGetByIdTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
 			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (auth.id, "1");
 			Assert.IsFalse (auth.pending);
 			Assert.IsTrue (auth.granted);
 			Assert.AreEqual (auth.reason, "its a test");
-			Assert.AreEqual (auth.terminalId, "1");
-			Assert.AreEqual (auth.terminalName, "test terminal");
+			Assert.AreEqual (auth.terminal.id, "1");
+			Assert.AreEqual (auth.terminal.name, "test terminal");
 		}
 
 		[Test]

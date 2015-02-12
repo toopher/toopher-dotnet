@@ -116,7 +116,7 @@ namespace Toopher
 			}
 
 			var json = advanced.raw.post (endpoint, parameters);
-			return new AuthenticationRequest (json);
+			return new AuthenticationRequest (json, this);
 		}
 
 		/// <summary>
@@ -224,7 +224,7 @@ namespace Toopher
 				{
 					string endpoint = string.Format ("authentication_requests/{0}", authenticationRequestId);
 					var json = api.advanced.raw.get (endpoint);
-					return new AuthenticationRequest (json);
+					return new AuthenticationRequest (json, api);
 				}
 			}
 
@@ -503,12 +503,14 @@ namespace Toopher
 	// Status information for an authentication request
 	public class AuthenticationRequest
 	{
-		private IDictionary<string, object> _dict;
+		private IDictionary<string, object> rawResponse;
+		private ToopherApi api;
+
 		public object this[string key]
 		{
 			get
 			{
-				return _dict[key];
+				return rawResponse[key];
 			}
 		}
 
@@ -532,41 +534,40 @@ namespace Toopher
 			get;
 			private set;
 		}
+		public int reasonCode
+		{
+			get;
+			private set;
+		}
 		public string reason
 		{
 			get;
 			private set;
 		}
-		public string terminalId
-		{
-			get;
-			private set;
-		}
-		public string terminalName
-		{
-			get;
-			private set;
-		}
+		public Action action;
+		public UserTerminal terminal;
+		public User user;
 
 		public override string ToString ()
 		{
-			return string.Format ("[AuthenticationRequest: id={0}; pending={1}; granted={2}; automated={3}; reason={4}; terminalId={5}; terminalName={6}]", id, pending, granted, automated, reason, terminalId, terminalName);
+			return string.Format ("[AuthenticationRequest: id={0}; pending={1}; granted={2}; automated={3}; reasonCode={4}; reason={5}; actionId={6}; actionName={7}; terminalId={8}; terminalName={9}; terminalRequesterSpecifiedId={10}; userId={11}; userName={12}; userToopherAuthenticationEnabled={13}]", id, pending, granted, automated, reasonCode, reason, action.id, action.name, terminal.id, terminal.name, terminal.requesterSpecifiedId, user.id, user.name, user.toopherAuthenticationEnabled);
 		}
 
-		public AuthenticationRequest (IDictionary<string, object> _dict)
+		public AuthenticationRequest (IDictionary<string, object> response, ToopherApi toopherApi)
 		{
-			this._dict = _dict;
+			this.rawResponse = response;
+			this.api = toopherApi;
 			try {
 				// validate that the json has the minimum keys we need
-				this.id = (string)_dict["id"];
-				this.pending = (bool)_dict["pending"];
-				this.granted = (bool)_dict["granted"];
-				this.automated = (bool)_dict["automated"];
-				this.reason = (string)_dict["reason"];
-
-				var terminal = (JsonObject)_dict["terminal"];
-				this.terminalId = (string)terminal["id"];
-				terminalName = (string)terminal["name"];
+				this.id = (string)response["id"];
+				this.pending = (bool)response["pending"];
+				this.granted = (bool)response["granted"];
+				this.automated = (bool)response["automated"];
+				this.reasonCode = Convert.ToInt32(response["reason_code"]);
+				this.reason = (string)response["reason"];
+				this.action = new Action((JsonObject)response["action"]);
+				this.terminal = new UserTerminal((JsonObject)response["terminal"], toopherApi);
+				this.user = new User((JsonObject)response["user"], toopherApi);
 			} catch (Exception ex) {
 				throw new RequestError ("Could not parse authentication status from response", ex);
 			}
