@@ -501,6 +501,17 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void PairingGetQrCodeImage ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
+			WebClientMock.ReturnValue = @"{}";
+			Pairing pairing = new Pairing (response, api);
+			pairing.GetQrCodeImage ();
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+		}
+
+		[Test]
 		public void AuthenticationRequestRefreshFromServerTest ()
 		{
 			var api = getApi();

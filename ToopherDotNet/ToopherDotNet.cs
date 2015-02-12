@@ -513,6 +513,13 @@ namespace Toopher
 			api.advanced.raw.post(endpoint, parameters);
 		}
 
+		public byte[] GetQrCodeImage ()
+		{
+			string endpoint = string.Format ("qr/pairings/{0}", id);
+			var result = api.advanced.raw.get(endpoint);
+			return System.Text.Encoding.UTF8.GetBytes (result.ToString());
+		}
+
 		private void Update (IDictionary<string, object> response)
 		{
 			this.rawResponse = response;
