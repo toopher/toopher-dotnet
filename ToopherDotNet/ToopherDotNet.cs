@@ -748,6 +748,16 @@ namespace Toopher
 				throw new RequestError ("Could not parse action from response", ex);
 			}
 		}
+
+		public void Update (IDictionary<string, object> response)
+		{
+			this.rawResponse = response;
+			try {
+				this.name = (string)response["name"];
+			} catch (Exception ex) {
+				throw new RequestError ("Could not parse action from response", ex);
+			}
+		}
 	}
 
 	// An exception class used to indicate an error in a request
