@@ -689,6 +689,14 @@ namespace Toopher
 			var json = api.advanced.raw.post (endpoint, parameters);
 			Update (json);
 		}
+
+		public void Reset ()
+		{
+			string endpoint = "users/reset";
+			NameValueCollection parameters = new NameValueCollection ();
+			parameters.Add ("name", name);
+			api.advanced.raw.post(endpoint, parameters);
+		}
 	}
 
 	public class UserTerminal

@@ -536,6 +536,18 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void UserResetTest ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}");
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":false}";
+			User user = new User (response, api);
+			user.Reset ();
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (WebClientMock.LastRequestData["name"], "userName");
+		}
+
+		[Test]
 		public void UserTerminalRefreshFromServerTest ()
 		{
 			var api = getApi();
