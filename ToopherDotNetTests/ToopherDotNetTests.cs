@@ -49,10 +49,15 @@ namespace ToopherDotNetTests
 			static public NameValueCollection LastRequestData { get; set; }
 			static public Exception ReturnException { get; set; }
 			static public string ReturnValue { get; set; }
+			static public string ReturnValueArray { get; set; }
 			string doit ()
 			{
 				if (ReturnException != null) {
 					throw ReturnException;
+				} else if (ReturnValueArray != null) {
+					var values = ReturnValueArray;
+					ReturnValueArray = null;
+					return values;
 				} else {
 					return ReturnValue;
 				}
@@ -330,6 +335,19 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}";
 			User user = api.advanced.users.GetById ("1");
 			Assert.IsInstanceOf<User> (user);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual (user.id, "1");
+			Assert.AreEqual (user.name, "username");
+			Assert.IsTrue (user.toopherAuthenticationEnabled);
+		}
+
+		[Test]
+		public void AdvancedUsersGetByNameTest ()
+		{
+			var api = getApi ();
+			WebClientMock.ReturnValueArray = @"[{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}]";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}";
+			User user = api.advanced.users.GetByName("username");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (user.id, "1");
 			Assert.AreEqual (user.name, "username");
