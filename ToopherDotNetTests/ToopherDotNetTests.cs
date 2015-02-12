@@ -511,7 +511,7 @@ namespace ToopherDotNetTests
 		{
 			var api = getApi();
 			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
-			WebClientMock.ReturnValue = @"{""url"":""[]""}";
+			WebClientMock.ReturnValue = @"{}";
 			Pairing pairing = new Pairing (response, api);
 			pairing.EmailResetLink ("test@test.com");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
