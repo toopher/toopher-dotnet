@@ -580,6 +580,15 @@ namespace Toopher
 			Update (json);
 		}
 
+		public void GrantWithOtp (string otp)
+		{
+			string endpoint = string.Format ("authentication_requests/{0}/otp_auth", id);
+			NameValueCollection parameters = new NameValueCollection ();
+			parameters.Add ("otp", otp);
+			var json = api.advanced.raw.post(endpoint, parameters);
+			Update (json);
+		}
+
 		private void Update (IDictionary<string, object> response)
 		{
 			this.rawResponse = response;

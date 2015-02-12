@@ -296,16 +296,18 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void GetAuthenticationRequestWIthOtpTest ()
+		public void AuthenticationRequestGrantWithOtpTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal""}}";
-			AuthenticationRequest auth = api.GetAuthenticationRequest ("1", otp: "123456");
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":true, ""granted"":false, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}");
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
+			AuthenticationRequest auth = new AuthenticationRequest (response, api);
+			auth.GrantWithOtp ("123456");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["otp"], "123456");
 			Assert.AreEqual (auth.id, "1");
+			Assert.IsTrue (auth.granted);
 		}
-
 
 		[Test]
 		public void AdvancedPairingsGetByIdTest ()
