@@ -474,6 +474,23 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void AuthenticationRequestRefreshFromServerTest ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}");
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":true, ""granted"":true, ""automated"":false, ""reason_code"":2, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal CHANGED"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user CHANGED"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName CHANGED""}}";
+			AuthenticationRequest auth = new AuthenticationRequest (response, api);
+			auth.RefreshFromServer ();
+			Assert.IsInstanceOf<AuthenticationRequest> (auth);
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Assert.IsTrue (auth.pending);
+			Assert.AreEqual (auth.reasonCode, 2);
+			Assert.AreEqual (auth.terminal.name, "test terminal CHANGED");
+			Assert.AreEqual (auth.user.name, "some user CHANGED");
+			Assert.AreEqual (auth.action.name, "actionName CHANGED");
+		}
+
+		[Test]
 		public void UserRefreshFromServerTest ()
 		{
 			var api = getApi();

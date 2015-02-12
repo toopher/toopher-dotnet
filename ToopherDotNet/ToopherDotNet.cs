@@ -569,7 +569,31 @@ namespace Toopher
 				this.terminal = new UserTerminal((JsonObject)response["terminal"], toopherApi);
 				this.user = new User((JsonObject)response["user"], toopherApi);
 			} catch (Exception ex) {
-				throw new RequestError ("Could not parse authentication status from response", ex);
+				throw new RequestError ("Could not parse authentication request from response", ex);
+			}
+		}
+
+		public void RefreshFromServer ()
+		{
+			string endpoint = string.Format ("authentication_requests/{0}",  id);
+			var json = api.advanced.raw.get(endpoint);
+			Update (json);
+		}
+
+		private void Update (IDictionary<string, object> response)
+		{
+			this.rawResponse = response;
+			try {
+				this.pending = (bool)response["pending"];
+				this.granted = (bool)response["granted"];
+				this.automated = (bool)response["automated"];
+				this.reasonCode = Convert.ToInt32(response["reason_code"]);
+				this.reason = (string)response["reason"];
+				this.action.Update((JsonObject)response["action"]);
+				this.terminal.Update((JsonObject)response["terminal"]);
+				this.user.Update((JsonObject)response["user"]);
+			} catch (Exception ex) {
+				throw new RequestError ("Could not parse authentication request from response", ex);
 			}
 		}
 	}
