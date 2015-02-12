@@ -500,6 +500,19 @@ namespace Toopher
 			return (string)json["url"];
 		}
 
+		public void EmailResetLink (string email, Dictionary<string, string> extras = null)
+		{
+			string endpoint = string.Format ("pairings/{0}/send_reset_link", id);
+			NameValueCollection parameters = new NameValueCollection ();
+			parameters.Add ("reset_email", email);
+			if (extras != null) {
+				foreach (KeyValuePair<string, string> kvp in extras) {
+					parameters.Add (kvp.Key, kvp.Value);
+				}
+			}
+			api.advanced.raw.post(endpoint, parameters);
+		}
+
 		private void Update (IDictionary<string, object> response)
 		{
 			this.rawResponse = response;

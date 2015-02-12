@@ -489,6 +489,18 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void PairingEmailResetLinkTest ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
+			WebClientMock.ReturnValue = @"{""url"":""[]""}";
+			Pairing pairing = new Pairing (response, api);
+			pairing.EmailResetLink ("test@test.com");
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (WebClientMock.LastRequestData["reset_email"], "test@test.com");
+		}
+
+		[Test]
 		public void AuthenticationRequestRefreshFromServerTest ()
 		{
 			var api = getApi();
