@@ -487,6 +487,19 @@ namespace Toopher
 			Update (json);
 		}
 
+		public string GetResetLink (Dictionary<string, string> extras = null)
+		{
+			string endpoint = string.Format ("pairings/{0}/generate_reset_link", id);
+			NameValueCollection parameters = new NameValueCollection ();
+			if (extras != null) {
+				foreach (KeyValuePair<string, string> kvp in extras) {
+					parameters.Add (kvp.Key, kvp.Value);
+				}
+			}
+			var json = api.advanced.raw.post (endpoint, parameters);
+			return (string)json["url"];
+		}
+
 		private void Update (IDictionary<string, object> response)
 		{
 			this.rawResponse = response;

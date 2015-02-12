@@ -476,6 +476,19 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void PairingGetResetLinkTest ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
+			string link = "http://api.toopher.test/v1/pairings/1/reset?reset_authorization=abcde";
+			WebClientMock.ReturnValue = @"{""url"":""" + link + @"""}";
+			Pairing pairing = new Pairing (response, api);
+			string returnedLink = pairing.GetResetLink ();
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (returnedLink, link);
+		}
+
+		[Test]
 		public void AuthenticationRequestRefreshFromServerTest ()
 		{
 			var api = getApi();
