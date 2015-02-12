@@ -508,6 +508,34 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void UserEnableToopherAuthentication ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":false}");
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}";
+			User user = new User (response, api);
+			user.EnableToopherAuthentication ();
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (WebClientMock.LastRequestData["toopher_authentication_enabled"], "true");
+			Assert.AreEqual (user.id, "1");
+			Assert.IsTrue (user.toopherAuthenticationEnabled);
+		}
+
+		[Test]
+		public void UserDisableToopherAuthentication ()
+		{
+			var api = getApi();
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}");
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":false}";
+			User user = new User (response, api);
+			user.DisableToopherAuthentication ();
+			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual (WebClientMock.LastRequestData["toopher_authentication_enabled"], "false");
+			Assert.AreEqual (user.id, "1");
+			Assert.IsFalse (user.toopherAuthenticationEnabled);
+		}
+
+		[Test]
 		public void UserTerminalRefreshFromServerTest ()
 		{
 			var api = getApi();

@@ -672,7 +672,23 @@ namespace Toopher
 			}
 		}
 
+		public void EnableToopherAuthentication ()
+		{
+			string endpoint = string.Format ("users/{0}", id);
+			NameValueCollection parameters = new NameValueCollection ();
+			parameters.Add ("toopher_authentication_enabled", "true");
+			var json = api.advanced.raw.post (endpoint, parameters);
+			Update (json);
+		}
 
+		public void DisableToopherAuthentication ()
+		{
+			string endpoint = string.Format ("users/{0}", id);
+			NameValueCollection parameters = new NameValueCollection ();
+			parameters.Add ("toopher_authentication_enabled", "false");
+			var json = api.advanced.raw.post (endpoint, parameters);
+			Update (json);
+		}
 	}
 
 	public class UserTerminal
