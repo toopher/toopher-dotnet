@@ -12,6 +12,15 @@ namespace ToopherDotNetTests
 	[TestFixture()]
 	public class Test
 	{
+		private static string DEFAULT_BASE_URL = "https://api.toopher.test/v1/";
+		private static string TOOPHER_CONSUMER_KEY = "abcdefg";
+		private static string TOOPHER_CONSUMER_SECRET = "hijklmnop";
+		private static string REQUEST_TOKEN = "s9s7vsb";
+		private static long REQUEST_TTL = 100L;
+		private static string OAUTH_NONCE = "12345678";
+		private static DateTime TEST_DATE = new DateTime(1970, 1, 1, 0, 16, 40, 0);
+
+
 		class MockWebResponse : WebResponse, IHttpWebResponse
 		{
 			HttpStatusCode errorCode;
@@ -88,6 +97,11 @@ namespace ToopherDotNetTests
 		private ToopherApi getApi ()
 		{
 			return new ToopherApi ("key", "secret", null, typeof (WebClientMock));
+		}
+
+		private ToopherIframe getToopherIframeApi ()
+		{
+			return new ToopherIframe (TOOPHER_CONSUMER_KEY, TOOPHER_CONSUMER_SECRET, DEFAULT_BASE_URL, typeof (WebClientMock));
 		}
 
 		[Test()]
@@ -615,6 +629,102 @@ namespace ToopherDotNetTests
 			Assert.AreEqual (userTerminal.name, "userTerminalNameChanged");
 			Assert.AreEqual (userTerminal.user.name, "userNameChanged");
 			Assert.IsFalse (userTerminal.user.toopherAuthenticationEnabled);
+		}
+		public void ValidatePostbackWithGoodSignatureIsSuccessfulTest ()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			data.Add("foo", new string[]{"bar"});
+			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
+			data.Add("session_token", new string[]{REQUEST_TOKEN});
+			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
+			try {
+				Assert.IsNotNull(api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			} catch (Exception) {
+				Assert.Fail("Valid signture, timestamp, and session token did not return validated data");
+			}
+		}
+
+		[Test]
+		public void ValidatePostbackWithBadSignatureFailsTest ()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			data.Add("foo", new string[]{"bar"});
+			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
+			data.Add("session_token", new string[]{REQUEST_TOKEN});
+			data.Add("toopher_sig", new string[]{"invalid"});
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Assert.That(ex.Message, Is.StringContaining("Computed signature does not match"));
+		}
+
+		[Test]
+		public void ValidatePostbackWithInvalidSessionTokenFailsTest ()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			data.Add("foo", new string[]{"bar"});
+			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
+			data.Add("session_token", new string[]{"invalid token"});
+			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Assert.That(ex.Message, Is.StringContaining("Session token does not match expected value"));
+		}
+
+		[Test]
+		public void ValidatePostbackWithExpiredSignatureFailsTest ()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(new DateTime(1970, 2, 1, 0, 16, 40, 0));
+			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			data.Add("foo", new string[]{"bar"});
+			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
+			data.Add("session_token", new string[]{REQUEST_TOKEN});
+			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Assert.That(ex.Message, Is.StringContaining("TTL Expired"));
+		}
+
+		[Test]
+		public void ValidatePostbackMissingTimestampFailsTest ()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			data.Add("foo", new string[]{"bar"});
+			data.Add("session_token", new string[]{REQUEST_TOKEN});
+			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Assert.That(ex.Message, Is.StringContaining("Missing required keys: timestamp"));
+		}
+
+		[Test]
+		public void ValidatePostbackMissingSignatureFailsTest ()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			data.Add("foo", new string[]{"bar"});
+			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
+			data.Add("session_token", new string[]{REQUEST_TOKEN});
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Assert.That(ex.Message, Is.StringContaining("Missing required keys: toopher_sig"));
+		}
+
+		[Test]
+		public void ValidatePostbackMissingSessionTokenFailsTest ()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			data.Add("foo", new string[]{"bar"});
+			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
+			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Assert.That(ex.Message, Is.StringContaining("Missing required keys: session_token"));
 		}
 	}
 }

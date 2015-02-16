@@ -61,7 +61,86 @@ namespace Toopher
 				this.webClientProxyType = typeof(WebClientProxy);
 			}
 		}
+
+		public Dictionary<string, string> ValidatePostback (Dictionary<string, string[]> extras, string sessionToken, long ttl)
+		{
+			try {
+				List<string> missingKeys = new List<string> ();
+				Dictionary<string, string> data = new Dictionary<string, string>();
+
+				foreach (var entry in extras)
+				{
+					if (entry.Value.Length > 0) {
+						data.Add(entry.Key, entry.Value[0]);
+					}
+				}
+
+				if (!data.ContainsKey("toopher_sig")) {
+					missingKeys.Add("toopher_sig");
+				}
+				if (!data.ContainsKey("timestamp")) {
+					missingKeys.Add("timestamp");
+				}
+				if (!data.ContainsKey("session_token")) {
+					missingKeys.Add("session_token");
+				}
+				if (missingKeys.Count() > 0) {
+					var keys = string.Join(", ", missingKeys.ToArray());
+					throw new SignatureValidationError ("Missing required keys: " + keys);
+				}
+
+				if (data["session_token"] != sessionToken) {
+					throw new SignatureValidationError ("Session token does not match expected value");
+				}
+
+				string maybeSignature = data["toopher_sig"];
+				data.Remove("toopher_sig");
+				var signatureValid = false;
+				try {
+					var computedSig = Signature(consumerSecret, maybeSignature, data);
+					signatureValid = computedSig == maybeSignature;
+				} catch (Exception e) {
+					signatureValid = false;
+				}
+
+				if (!signatureValid) {
+					throw new SignatureValidationError ("Computed signature does not match");
+				}
+
+				var ttlValid = (int)(GetUnixEpochTimeInSeconds () - ttl) < Int32.Parse(data["timestamp"]);
+				if (!ttlValid) {
+					throw new SignatureValidationError ("TTL Expired");
+				}
+
+				return data;
+			} catch (Exception e) {
+				throw new SignatureValidationError ("Exception while validating toopher signature: " + e);
+			}
+		}
+
+		private static string Signature (string secret, string maybeSignature, Dictionary<string, string> data)
+		{
+			Dictionary<string, string> sortedData = data.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+			string joinedString = string.Join("&", (sortedData.Select(d => d.Key + "=" + d.Value).ToArray()));
+
+			byte[] keyByte = Encoding.UTF8.GetBytes(secret);
+			byte[] messageBytes = Encoding.UTF8.GetBytes(joinedString);
+
+			using (var hmac = new HMACSHA1(keyByte))
+			{
+				byte[] hashMessage = hmac.ComputeHash(messageBytes);
+				return Convert.ToBase64String(hashMessage);
+			}
+		}
+
+	}
+
+	public class SignatureValidationError: Exception
 	{
+		public SignatureValidationError (string message): base(message)
+		{
+		}
+	}
 
 	public class ToopherApi
 	{
