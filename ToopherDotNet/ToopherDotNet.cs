@@ -1,6 +1,7 @@
 using System;
 using OAuth;
 using System.Net;
+using System.Web;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
@@ -9,12 +10,61 @@ using SimpleJson;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 
 namespace Toopher
 {
-	public class ToopherApi
+	public class ToopherIframe
+	{
+		private const string IFRAME_VERSION = "2";
+		private const long DEFAULT_TTL = 300L;
+		private const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
+
+		private string baseUrl;
+		private string consumerKey;
+		private string consumerSecret;
+		private Type webClientProxyType;
+		private static DateTime dateOverride;
+
+		public static void SetDateOverride (DateTime dateOverride)
+		{
+			ToopherIframe.dateOverride = dateOverride;
+		}
+
+		private static DateTime GetDate ()
+		{
+			if (dateOverride == null) {
+				return DateTime.UtcNow;
+			} else {
+				return dateOverride;
+			}
+		}
+
+		private static int GetUnixEpochTimeInSeconds ()
+		{
+			TimeSpan t = (GetDate() - new DateTime(1970, 1, 1));
+			return (int) t.TotalSeconds;
+		}
+
+		public ToopherIframe (string consumerKey, string consumerSecret, string baseUrl = null, Type webClientProxyType = null)
+		{
+			this.consumerKey = consumerKey;
+			this.consumerSecret = consumerSecret;
+			if (baseUrl != null) {
+				this.baseUrl = baseUrl;
+			} else {
+				this.baseUrl = ToopherApi.DEFAULT_BASE_URL;
+			}
+			if (webClientProxyType != null) {
+				this.webClientProxyType = webClientProxyType;
+			} else {
+				this.webClientProxyType = typeof(WebClientProxy);
+			}
+		}
 	{
 
+	public class ToopherApi
+	{
 		public const string VERSION = "2.0.0";
 		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
 		public ToopherApi.AdvancedApiUsageFactory advanced;
