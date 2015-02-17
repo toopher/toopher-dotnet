@@ -36,12 +36,6 @@ namespace Toopher
 			return dateOverride ?? DateTime.UtcNow;
 		}
 
-		private static int GetUnixEpochTimeInSeconds ()
-		{
-			TimeSpan t = (GetDate() - new DateTime(1970, 1, 1));
-			return (int) t.TotalSeconds;
-		}
-
 		public ToopherIframe (string consumerKey, string consumerSecret, string baseUrl = null, Type webClientProxyType = null)
 		{
 			this.consumerKey = consumerKey;
@@ -165,6 +159,22 @@ namespace Toopher
 			}
 		}
 
+		private string GetOauthUrl (string url, NameValueCollection parameters)
+		{
+			OAuthRequest client = OAuthRequest.ForRequestToken (consumerKey, consumerSecret);
+			client.RequestUrl = url;
+
+			string oauthParams = client.GetAuthorizationQuery (parameters);
+			string requestParams = UrlEncodeParameters (parameters);
+			return url + "?" + requestParams + "&" + oauthParams;
+		}
+
+		private static int GetUnixEpochTimeInSeconds ()
+		{
+			TimeSpan t = (GetDate() - new DateTime(1970, 1, 1));
+			return (int) t.TotalSeconds;
+		}
+
 		private static string Signature (string secret, string maybeSignature, Dictionary<string, string> data)
 		{
 			Dictionary<string, string> sortedData = data.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
@@ -180,17 +190,7 @@ namespace Toopher
 			}
 		}
 
-		private string GetOauthUrl (string url, NameValueCollection parameters)
-		{
-			OAuthRequest client = OAuthRequest.ForRequestToken (consumerKey, consumerSecret);
-			client.RequestUrl = url;
-
-			string oauthParams = client.GetAuthorizationQuery (parameters);
-			string requestParams = UrlEncodeParameters (parameters);
-			return url + "?" + requestParams + "&" + oauthParams;
-		}
-
-		private string UrlEncodeParameters (NameValueCollection parameters)
+		private static string UrlEncodeParameters (NameValueCollection parameters)
 		{
 			WebParameterCollection collection = new WebParameterCollection(parameters);
 			foreach (var parameter in collection)
