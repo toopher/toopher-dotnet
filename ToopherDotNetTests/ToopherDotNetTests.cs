@@ -18,6 +18,11 @@ namespace ToopherDotNetTests
 		public const string TOOPHER_CONSUMER_KEY = "abcdefg";
 		public const string TOOPHER_CONSUMER_SECRET = "hijklmnop";
 
+		public const string PAIRING_RESPONSE = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
+		public const string AUTH_REQUEST_RESPONSE = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
+		public const string USER_RESPONSE = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}";
+		public const string USER_TERMINAL_RESPONSE = @"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}";
+
 		class MockWebResponse : WebResponse, IHttpWebResponse
 		{
 			HttpStatusCode errorCode;
@@ -297,7 +302,7 @@ namespace ToopherDotNetTests
 		public void CreatePairingWithPhraseTest ()
 		{
 			var api = getApi();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
+			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.Pair ("some user", "awkward turtle");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["pairing_phrase"], "awkward turtle");
@@ -309,7 +314,7 @@ namespace ToopherDotNetTests
 		public void CreateSmsPairingTest ()
 		{
 			var api = getApi();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
+			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.Pair ("some user", "555-555-5555");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["phone_number"], "555-555-5555");
@@ -321,7 +326,7 @@ namespace ToopherDotNetTests
 		public void CreateQrPairingTest ()
 		{
 			var api = getApi();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
+			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.Pair ("some user");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some user");
@@ -332,7 +337,7 @@ namespace ToopherDotNetTests
 		public void ArbitraryParametersOnPairTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
+			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.Pair ("awkward turtle", "some user", extras: new Dictionary<string,string>(){{"test_param", "42"}});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
@@ -356,7 +361,7 @@ namespace ToopherDotNetTests
 		public void AuthenticateWithUsernameAndExtrasTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
+			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
 			AuthenticationRequest auth = api.Authenticate ("some other user", "requester specified id", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some other user");
@@ -369,7 +374,7 @@ namespace ToopherDotNetTests
 		public void ArbitraryParamtersOnAuthenticateTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1,""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
+			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
 			AuthenticationRequest auth = api.Authenticate ("1", "test terminal", extras: new Dictionary<string, string> () { { "test_param", "42" } });
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
@@ -422,7 +427,7 @@ namespace ToopherDotNetTests
 		public void AdvancedPairingsGetByIdTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}";
+			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.advanced.pairings.GetById ("1");
 			Assert.IsInstanceOf<Pairing> (pairing);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
@@ -450,7 +455,7 @@ namespace ToopherDotNetTests
 		public void AdvancedAuthenticationRequestsGetByIdTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
+			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
 			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (auth.id, "1");
@@ -481,12 +486,12 @@ namespace ToopherDotNetTests
 		public void AdvancedUsersGetByIdTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}";
+			WebClientMock.ReturnValue = USER_RESPONSE;
 			User user = api.advanced.users.GetById ("1");
 			Assert.IsInstanceOf<User> (user);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "username");
+			Assert.AreEqual (user.name, "userName");
 			Assert.IsTrue (user.toopherAuthenticationEnabled);
 		}
 
@@ -494,11 +499,11 @@ namespace ToopherDotNetTests
 		public void AccessArbitraryKeysInAdvancedUsersGetByIdTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true, ""random_key"":""84""}";
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true, ""random_key"":""84""}";
 			User user = api.advanced.users.GetById  ("1");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "username");
+			Assert.AreEqual (user.name, "userName");
 			Assert.IsTrue (user.toopherAuthenticationEnabled);
 			Assert.AreEqual (user["random_key"], "84");
 		}
@@ -507,12 +512,12 @@ namespace ToopherDotNetTests
 		public void AdvancedUsersGetByNameTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValueArray = @"[{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}]";
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}";
-			User user = api.advanced.users.GetByName("username");
+			WebClientMock.ReturnValueArray = @"[{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}]";
+			WebClientMock.ReturnValue = USER_RESPONSE;
+			User user = api.advanced.users.GetByName("userName");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "username");
+			Assert.AreEqual (user.name, "userName");
 			Assert.IsTrue (user.toopherAuthenticationEnabled);
 		}
 
@@ -520,12 +525,12 @@ namespace ToopherDotNetTests
 		public void AdvancedUsersCreateTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}";
-			User user = api.advanced.users.Create ("username");
+			WebClientMock.ReturnValue = USER_RESPONSE;
+			User user = api.advanced.users.Create ("userName");
 			Assert.IsInstanceOf<User> (user);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "username");
+			Assert.AreEqual (user.name, "userName");
 			Assert.IsTrue (user.toopherAuthenticationEnabled);
 		}
 
@@ -533,15 +538,15 @@ namespace ToopherDotNetTests
 		public void AdvancedUsersCreateWithParamsTest ()
 		{
 			var api = getApi();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}";
+			WebClientMock.ReturnValue = USER_RESPONSE;
 			NameValueCollection parameters = new NameValueCollection();
 			parameters.Add ("foo", "bar");
-			User user = api.advanced.users.Create ("username", parameters);
+			User user = api.advanced.users.Create ("userName", parameters);
 			Assert.IsInstanceOf<User> (user);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["foo"], "bar");
 			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "username");
+			Assert.AreEqual (user.name, "userName");
 			Assert.IsTrue (user.toopherAuthenticationEnabled);
 		}
 
@@ -549,7 +554,7 @@ namespace ToopherDotNetTests
 		public void AdvancedUserTerminalsGetByIdTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}";
+			WebClientMock.ReturnValue = USER_TERMINAL_RESPONSE;
 			UserTerminal userTerminal = api.advanced.userTerminals.GetById ("1");
 			Assert.IsInstanceOf<UserTerminal> (userTerminal);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
@@ -576,7 +581,7 @@ namespace ToopherDotNetTests
 		public void AdvancedUserTerminalsCreateTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}";
+			WebClientMock.ReturnValue = USER_TERMINAL_RESPONSE;
 			UserTerminal userTerminal = api.advanced.userTerminals.Create ("userName", "userTerminalName", "requesterSpecifiedId");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (userTerminal.id, "1");
@@ -589,7 +594,7 @@ namespace ToopherDotNetTests
 		public void AdvancedUserTerminalsCreateWithParamsTest ()
 		{
 			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}";
+			WebClientMock.ReturnValue = USER_TERMINAL_RESPONSE;
 			NameValueCollection parameters = new NameValueCollection();
 			parameters.Add ("foo", "bar");
 			UserTerminal userTerminal = api.advanced.userTerminals.Create ("userName", "userTerminalName", "requesterSpecifiedId", parameters);
@@ -655,13 +660,14 @@ namespace ToopherDotNetTests
 	[TestFixture()]
 	public class PairingTests : TestBase
 	{
+		private IDictionary<string, object> PAIRING_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
+
 		[Test]
 		public void PairingRefreshFromServerTest ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":true, ""enabled"":false, ""user"":{""id"":""1"",""name"":""userNameChanged"", ""toopher_authentication_enabled"":true}}";
-			Pairing pairing = new Pairing (response, api);
+			Pairing pairing = new Pairing (PAIRING_DICT, api);
 			pairing.RefreshFromServer ();
 			Assert.IsInstanceOf<Pairing> (pairing);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
@@ -675,10 +681,9 @@ namespace ToopherDotNetTests
 		public void PairingGetResetLinkTest ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
 			string link = "http://api.toopher.test/v1/pairings/1/reset?reset_authorization=abcde";
 			WebClientMock.ReturnValue = @"{""url"":""" + link + @"""}";
-			Pairing pairing = new Pairing (response, api);
+			Pairing pairing = new Pairing (PAIRING_DICT, api);
 			string returnedLink = pairing.GetResetLink ();
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (returnedLink, link);
@@ -688,9 +693,8 @@ namespace ToopherDotNetTests
 		public void PairingEmailResetLinkTest ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
 			WebClientMock.ReturnValue = @"{}";
-			Pairing pairing = new Pairing (response, api);
+			Pairing pairing = new Pairing (PAIRING_DICT, api);
 			pairing.EmailResetLink ("test@test.com");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["reset_email"], "test@test.com");
@@ -700,9 +704,8 @@ namespace ToopherDotNetTests
 		public void PairingGetQrCodeImage ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
 			WebClientMock.ReturnValue = @"{}";
-			Pairing pairing = new Pairing (response, api);
+			Pairing pairing = new Pairing (PAIRING_DICT, api);
 			pairing.GetQrCodeImage ();
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 		}
@@ -712,13 +715,14 @@ namespace ToopherDotNetTests
 	[TestFixture()]
 	public class AuthenticationRequestTests : TestBase
 	{
+		private IDictionary<string, object> AUTH_REQUEST_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":true, ""granted"":false, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}");
+
 		[Test]
 		public void AuthenticationRequestRefreshFromServerTest ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}");
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":true, ""granted"":true, ""automated"":false, ""reason_code"":2, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal CHANGED"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user CHANGED"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName CHANGED""}}";
-			AuthenticationRequest auth = new AuthenticationRequest (response, api);
+			AuthenticationRequest auth = new AuthenticationRequest (AUTH_REQUEST_DICT, api);
 			auth.RefreshFromServer ();
 			Assert.IsInstanceOf<AuthenticationRequest> (auth);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
@@ -733,9 +737,8 @@ namespace ToopherDotNetTests
 		public void AuthenticationRequestGrantWithOtpTest ()
 		{
 			var api = getApi ();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":true, ""granted"":false, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}");
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
-			AuthenticationRequest auth = new AuthenticationRequest (response, api);
+			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
+			AuthenticationRequest auth = new AuthenticationRequest (AUTH_REQUEST_DICT, api);
 			auth.GrantWithOtp ("123456");
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["otp"], "123456");
@@ -747,28 +750,28 @@ namespace ToopherDotNetTests
 	[TestFixture()]
 	public class UserTests : TestBase
 	{
+		private IDictionary<string, object> USER_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}");
+
 		[Test]
 		public void UserRefreshFromServerTest ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":false}");
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userNameChanged"", ""toopher_authentication_enabled"":true}";
-			User user = new User (response, api);
+			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userNameChanged"", ""toopher_authentication_enabled"":false}";
+			User user = new User (USER_DICT, api);
 			user.RefreshFromServer ();
 			Assert.IsInstanceOf<User> (user);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual (user.id, "1");
 			Assert.AreEqual (user.name, "userNameChanged");
-			Assert.IsTrue (user.toopherAuthenticationEnabled);
+			Assert.IsFalse (user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
 		public void UserEnableToopherAuthentication ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":false}");
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}";
-			User user = new User (response, api);
+			WebClientMock.ReturnValue = USER_RESPONSE;
+			User user = new User (USER_DICT, api);
 			user.EnableToopherAuthentication ();
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["toopher_authentication_enabled"], "true");
@@ -780,9 +783,8 @@ namespace ToopherDotNetTests
 		public void UserDisableToopherAuthentication ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""username"", ""toopher_authentication_enabled"":true}");
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":false}";
-			User user = new User (response, api);
+			User user = new User (USER_DICT, api);
 			user.DisableToopherAuthentication ();
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["toopher_authentication_enabled"], "false");
@@ -794,9 +796,8 @@ namespace ToopherDotNetTests
 		public void UserResetTest ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}");
-			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":false}";
-			User user = new User (response, api);
+			WebClientMock.ReturnValue = USER_RESPONSE;
+			User user = new User (USER_DICT, api);
 			user.Reset ();
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["name"], "userName");
@@ -807,13 +808,14 @@ namespace ToopherDotNetTests
 	[TestFixture()]
 	public class UserTerminalTests : TestBase
 	{
+		private IDictionary<string, object> USER_TERMINAL_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}");
+
 		[Test]
 		public void UserTerminalRefreshFromServerTest ()
 		{
 			var api = getApi();
-			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}");
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalNameChanged"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userNameChanged"", ""toopher_authentication_enabled"":false}}";
-			UserTerminal userTerminal = new UserTerminal (response, api);
+			UserTerminal userTerminal = new UserTerminal (USER_TERMINAL_DICT, api);
 			userTerminal.RefreshFromServer ();
 			Assert.IsInstanceOf<UserTerminal> (userTerminal);
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
