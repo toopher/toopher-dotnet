@@ -16,9 +16,9 @@ namespace Toopher
 {
 	public class ToopherIframe
 	{
-		private const string IFRAME_VERSION = "2";
-		private const long DEFAULT_TTL = 300L;
-		private const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
+		public const string IFRAME_VERSION = "2";
+		public const long DEFAULT_TTL = 300L;
+		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
 
 		private string baseUrl;
 		private string consumerKey;
