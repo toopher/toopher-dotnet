@@ -676,6 +676,19 @@ namespace ToopherDotNetTests
 		private IDictionary<string, object> PAIRING_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
 
 		[Test]
+		public void CreatePairingTest ()
+		{
+			var api = getToopherApi ();
+			Pairing pairing = new Pairing (PAIRING_DICT, api);
+			Assert.AreEqual (pairing.id, "1");
+			Assert.IsFalse (pairing.pending);
+			Assert.IsTrue (pairing.enabled);
+			Assert.AreEqual (pairing.user.id, "1");
+			Assert.AreEqual (pairing.user.name, "userName");
+			Assert.IsTrue (pairing.user.toopherAuthenticationEnabled);
+		}
+
+		[Test]
 		public void PairingRefreshFromServerTest ()
 		{
 			var api = getToopherApi ();
@@ -731,6 +744,27 @@ namespace ToopherDotNetTests
 		private IDictionary<string, object> AUTH_REQUEST_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":true, ""granted"":false, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}");
 
 		[Test]
+		public void CreateAuthenticationRequestTest ()
+		{
+			var api = getToopherApi ();
+			AuthenticationRequest auth = new AuthenticationRequest (AUTH_REQUEST_DICT, api);
+			Assert.AreEqual (auth.id, "1");
+			Assert.IsTrue (auth.pending);
+			Assert.IsFalse (auth.granted);
+			Assert.IsFalse (auth.automated);
+			Assert.AreEqual (auth.reasonCode, 1);
+			Assert.AreEqual (auth.reason, "its a test");
+			Assert.AreEqual (auth.terminal.id, "1");
+			Assert.AreEqual (auth.terminal.name, "test terminal");
+			Assert.AreEqual (auth.terminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.AreEqual (auth.user.id, "1");
+			Assert.AreEqual (auth.user.name, "some user");
+			Assert.IsTrue (auth.user.toopherAuthenticationEnabled);
+			Assert.AreEqual (auth.action.id, "1");
+			Assert.AreEqual (auth.action.name, "actionName");
+		}
+
+		[Test]
 		public void AuthenticationRequestRefreshFromServerTest ()
 		{
 			var api = getToopherApi ();
@@ -760,10 +794,21 @@ namespace ToopherDotNetTests
 		}
 	}
 
+
 	[TestFixture()]
 	public class UserTests : TestBase
 	{
 		private IDictionary<string, object> USER_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}");
+
+		[Test]
+		public void CreateUserTest ()
+		{
+			var api = getToopherApi ();
+			Toopher.User user = new Toopher.User (USER_DICT, api);
+			Assert.AreEqual (user.id, "1");
+			Assert.AreEqual (user.name, "userName");
+			Assert.IsTrue (user.toopherAuthenticationEnabled);
+		}
 
 		[Test]
 		public void UserRefreshFromServerTest ()
@@ -824,6 +869,19 @@ namespace ToopherDotNetTests
 		private IDictionary<string, object> USER_TERMINAL_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}");
 
 		[Test]
+		public void CreateUserTerminalTest ()
+		{
+			var api = getToopherApi ();
+			UserTerminal userTerminal = new UserTerminal (USER_TERMINAL_DICT, api);
+			Assert.AreEqual (userTerminal.id, "1");
+			Assert.AreEqual (userTerminal.name, "userTerminalName");
+			Assert.AreEqual (userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.AreEqual (userTerminal.user.id, "1");
+			Assert.AreEqual (userTerminal.user.name, "userName");
+			Assert.IsTrue (userTerminal.user.toopherAuthenticationEnabled);
+		}
+
+		[Test]
 		public void UserTerminalRefreshFromServerTest ()
 		{
 			var api = getToopherApi ();
@@ -836,6 +894,19 @@ namespace ToopherDotNetTests
 			Assert.AreEqual (userTerminal.name, "userTerminalNameChanged");
 			Assert.AreEqual (userTerminal.user.name, "userNameChanged");
 			Assert.IsFalse (userTerminal.user.toopherAuthenticationEnabled);
+		}
+	}
+
+	[TestFixture()]
+	public class ActionTests : TestBase
+	{
+		[Test]
+		public void CreateActionTest ()
+		{
+			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""actionName""}");
+			Toopher.Action action = new Toopher.Action (response);
+			Assert.AreEqual (action.id, "1");
+			Assert.AreEqual (action.name, "actionName");
 		}
 	}
 }
