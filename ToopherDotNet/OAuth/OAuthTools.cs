@@ -27,6 +27,14 @@ namespace OAuth
           OAuthTools.nonceOverride = nonceOverride;
         }
 
+        private static DateTime? dateOverride;
+
+        public static void SetDateOverride (DateTime? dateOverride)
+        {
+          OAuthTools.dateOverride = dateOverride;
+        }
+
+
 #if !SILVERLIGHT
         private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
 #endif
@@ -79,7 +87,7 @@ namespace OAuth
         /// <returns></returns>
         public static string GetTimestamp()
         {
-            return GetTimestamp(DateTime.UtcNow);
+          return GetTimestamp(dateOverride ?? DateTime.UtcNow);
         }
 
         /// <summary>
