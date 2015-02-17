@@ -164,7 +164,7 @@ namespace OAuth
             return concatenated;
         }
 
-        private static string Concatenate(ICollection<WebParameter> collection, string separator, string spacer)
+        public static string Concatenate(ICollection<WebParameter> collection, string separator, string spacer)
         {
             var sb = new StringBuilder();
 
