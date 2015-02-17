@@ -126,6 +126,19 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void ToopherIframeVersionTest ()
+		{
+			Assert.IsTrue (int.Parse(ToopherIframe.IFRAME_VERSION) >= 1);
+		}
+
+		[Test]
+		public void ToopherBaseUrlTest ()
+		{
+			StringAssert.Contains ("https", ToopherIframe.DEFAULT_BASE_URL);
+			Assert.IsTrue (System.Uri.IsWellFormedUriString (ToopherIframe.DEFAULT_BASE_URL, System.UriKind.Absolute));
+		}
+
+		[Test]
 		public void GetAuthenticationUrlTest ()
 		{
 			var api = getToopherIframeApi();
