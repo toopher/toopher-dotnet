@@ -24,20 +24,16 @@ namespace Toopher
 		private string consumerKey;
 		private string consumerSecret;
 		private Type webClientProxyType;
-		private static DateTime dateOverride;
+		private static DateTime? dateOverride;
 
-		public static void SetDateOverride (DateTime dateOverride)
+		public static void SetDateOverride (DateTime? dateOverride)
 		{
 			ToopherIframe.dateOverride = dateOverride;
 		}
 
 		private static DateTime GetDate ()
 		{
-			if (dateOverride == null) {
-				return DateTime.UtcNow;
-			} else {
-				return dateOverride;
-			}
+			return dateOverride ?? DateTime.UtcNow;
 		}
 
 		private static int GetUnixEpochTimeInSeconds ()
@@ -60,6 +56,57 @@ namespace Toopher
 			} else {
 				this.webClientProxyType = typeof(WebClientProxy);
 			}
+		}
+
+		public string GetAuthenticationUrl (string userName, string resetEmail, string requestToken, string actionName = "Log In", string requesterMetadata = "None", Dictionary<string, string> extras = null)
+		{
+			NameValueCollection parameters = new NameValueCollection ();
+			long ttl;
+			if (extras != null && extras.ContainsKey("ttl")) {
+				ttl = Convert.ToInt64(extras["ttl"]);
+				extras.Remove ("ttl");
+			} else {
+				ttl = DEFAULT_TTL;
+			}
+
+			parameters.Add ("v", IFRAME_VERSION);
+			parameters.Add ("username", userName);
+			parameters.Add ("reset_email", resetEmail);
+			parameters.Add ("session_token", requestToken);
+			parameters.Add ("action_name", actionName);
+			parameters.Add ("requester_metadata", requesterMetadata);
+			parameters.Add ("expires", (GetUnixEpochTimeInSeconds() + ttl).ToString());
+
+			if (extras != null) {
+				foreach (KeyValuePair<string, string> kvp in extras) {
+					parameters.Add (kvp.Key, kvp.Value);
+				}
+			}
+			return GetOauthUrl (baseUrl + "web/authenticate", parameters);
+		}
+
+		public string GetUserManagementUrl (string userName, string resetEmail, Dictionary<string, string> extras = null)
+		{
+			NameValueCollection parameters = new NameValueCollection ();
+			long ttl;
+			if (extras != null && extras.ContainsKey("ttl")) {
+				ttl = Convert.ToInt64(extras["ttl"]);
+				extras.Remove ("ttl");
+			} else {
+				ttl = DEFAULT_TTL;
+			}
+
+			parameters.Add("v", IFRAME_VERSION);
+			parameters.Add("username", userName);
+			parameters.Add("reset_email", resetEmail);
+			parameters.Add ("expires", (GetUnixEpochTimeInSeconds() + ttl).ToString());
+
+			if (extras != null) {
+				foreach (KeyValuePair<string, string> kvp in extras) {
+					parameters.Add (kvp.Key, kvp.Value);
+				}
+			}
+			return GetOauthUrl (baseUrl + "web/manage_user", parameters);
 		}
 
 		public Dictionary<string, string> ValidatePostback (Dictionary<string, string[]> extras, string sessionToken, long ttl)
@@ -133,6 +180,26 @@ namespace Toopher
 			}
 		}
 
+		private string GetOauthUrl (string url, NameValueCollection parameters)
+		{
+			OAuthRequest client = OAuthRequest.ForRequestToken (consumerKey, consumerSecret);
+			client.RequestUrl = url;
+
+			string oauthParams = client.GetAuthorizationQuery (parameters);
+			string requestParams = UrlEncodeParameters (parameters);
+			return url + "?" + requestParams + "&" + oauthParams;
+		}
+
+		private string UrlEncodeParameters (NameValueCollection parameters)
+		{
+			WebParameterCollection collection = new WebParameterCollection(parameters);
+			foreach (var parameter in collection)
+			{
+				parameter.Value = OAuthTools.UrlEncodeStrict(parameter.Value).Replace("%20", "+");
+			}
+			collection.Sort((x, y) => x.Name.Equals(y.Name) ? x.Value.CompareTo(y.Value) : x.Name.CompareTo(y.Name));
+			return OAuthTools.Concatenate(collection, "=", "&");
+		}
 	}
 
 	public class SignatureValidationError: Exception

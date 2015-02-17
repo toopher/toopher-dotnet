@@ -1,6 +1,8 @@
 using System;
+using OAuth;
 using System.IO;
 using System.Net;
+using System.Web;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using Toopher;
@@ -92,6 +94,9 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = null;
 			WebClientMock.LastRequestMethod = null;
 			WebClientMock.LastRequestData = null;
+			ToopherIframe.SetDateOverride(null);
+			OAuthTools.SetNonceOverride(null);
+			OAuthTools.SetDateOverride(null);
 		}
 
 		private ToopherApi getApi ()
@@ -630,6 +635,60 @@ namespace ToopherDotNetTests
 			Assert.AreEqual (userTerminal.user.name, "userNameChanged");
 			Assert.IsFalse (userTerminal.user.toopherAuthenticationEnabled);
 		}
+
+		[Test]
+		public void GetAuthenticationUrlTest ()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			OAuthTools.SetNonceOverride (OAUTH_NONCE);
+			OAuthTools.SetDateOverride (TEST_DATE);
+			string expected = "https://api.toopher.test/v1/web/authenticate?action_name=Log+In&expires=1300&requester_metadata=None&reset_email=jdoe%40example.com&session_token=s9s7vsb&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=YN%2BkKNTaoypsB37fsjvMS8vsG5A%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
+			var authUrl = api.GetAuthenticationUrl ("jdoe", "jdoe@example.com", REQUEST_TOKEN);
+			Assert.AreEqual (expected, authUrl);
+		}
+
+		[Test]
+		public void GetAuthenticationUrlWithExtrasTest ()
+		{
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("allow_inline_pairing", "false");
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			OAuthTools.SetNonceOverride (OAUTH_NONCE);
+			OAuthTools.SetDateOverride (TEST_DATE);
+			string expected = "https://api.toopher.test/v1/web/authenticate?action_name=it+is+a+test&allow_inline_pairing=false&expires=1300&requester_metadata=None&reset_email=jdoe%40example.com&session_token=s9s7vsb&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=W%2F2dcdsVc7YgdSCZuEo8ViHLlOo%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
+			var authUrl = api.GetAuthenticationUrl ("jdoe", "jdoe@example.com", REQUEST_TOKEN, "it is a test", "None", extras);
+			Assert.AreEqual (expected, authUrl);
+		}
+
+		[Test]
+		public void GetUserManagementUrlTest ()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			OAuthTools.SetNonceOverride (OAUTH_NONCE);
+			OAuthTools.SetDateOverride (TEST_DATE);
+			string expected = "https://api.toopher.test/v1/web/manage_user?expires=1300&reset_email=jdoe%40example.com&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=NjwH5yWPE2CCJL8v%2FMNknL%2BeTpE%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
+			var userManagementUrl = api.GetUserManagementUrl ("jdoe", "jdoe@example.com");
+			Assert.AreEqual (expected, userManagementUrl);
+		}
+
+		[Test]
+		public void GetUserManagementUrlWithExtrasTest ()
+		{
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "100");
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			OAuthTools.SetNonceOverride (OAUTH_NONCE);
+			OAuthTools.SetDateOverride (TEST_DATE);
+			string expected = "https://api.toopher.test/v1/web/manage_user?expires=1100&reset_email=jdoe%40example.com&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=sV8qoKnxJ3fxfP6AHNa0eNFxzJs%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
+			var userManagementUrl = api.GetUserManagementUrl ("jdoe", "jdoe@example.com", extras);
+			Assert.AreEqual (expected, userManagementUrl);
+		}
+
+		[Test]
 		public void ValidatePostbackWithGoodSignatureIsSuccessfulTest ()
 		{
 			var api = getToopherIframeApi();
