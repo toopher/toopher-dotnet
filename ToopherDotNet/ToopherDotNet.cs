@@ -315,64 +315,6 @@ namespace Toopher
 			return new AuthenticationRequest (json, this);
 		}
 
-		/// <summary>
-		/// Create a named terminal in the Toopher API for the (userName, terminalIdentifier) combination
-		/// </summary>
-		/// <param name="userName">Name of the user</param>
-		/// <param name="terminalName">User-assigned "friendly" terminal name</param>
-		/// <param name="terminalIdentifier">Unique terminal identifier for this terminal.  Does not need to be human-readable.</param>
-		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
-		public void CreateUserTerminal (string userName, string terminalName, string terminalIdentifier)
-		{
-			string endpoint = "user_terminals/create";
-			NameValueCollection parameters = new NameValueCollection();
-			parameters["user_name"] = userName;
-			parameters["name"] = terminalName;
-			parameters["name_extra"] = terminalIdentifier;
-			advanced.raw.post (endpoint, parameters);
-		}
-
-		/// <summary>
-		/// Enable or Disable Toopher Authentication for an individual user.  If the user is
-		/// disabled, future attempts to authenticate the user with Toopher will return
-		/// a UserDisabledError
-		/// </summary>
-		/// <param name="userName">Name of the user to modify</param>
-		/// <param name="toopherEnabled">True if the user should be authenticated with Toopher</param>
-		/// <exception cref="RequestError">Thrown when there is a problem contacting the Toopher API</exception>
-		public void SetToopherEnabledForUser (string userName, bool toopherEnabled)
-		{
-			string searchEndpoint = "users";
-			NameValueCollection parameters = new NameValueCollection ();
-			parameters["user_name"] = userName;
-
-			JsonArray jArr = advanced.raw.getArray (searchEndpoint, parameters);
-			if (jArr.Count > 1) {
-				throw new RequestError ("Multiple users with name = " + userName);
-			}
-			if (jArr.Count == 0) {
-				throw new RequestError ("No users with name = " + userName);
-			}
-
-			string userId = (string)((JsonObject)jArr[0])["id"];
-
-			string updateEndpoint = "users/" + userId;
-			parameters = new NameValueCollection ();
-			parameters["disable_toopher_auth"] = toopherEnabled ? "false" : "true";
-			advanced.raw.post (updateEndpoint, parameters);
-		}
-
-		public string GetPairingResetLink (string pairingId, string securityQuestion = null, string securityAnswer = null)
-		{
-			string endpoint = "pairings/" + pairingId + "/generate_reset_link";
-			NameValueCollection parameters = new NameValueCollection ();
-			parameters["security_question"] = securityQuestion;
-			parameters["security_answer"] = securityAnswer;
-
-			JsonObject pairingResetLink = advanced.raw.post (endpoint, parameters);
-			return (string)pairingResetLink["url"];
-		}
-
 		public class AdvancedApiUsageFactory
 		{
 			public ToopherApi.AdvancedApiUsageFactory.Pairings pairings;

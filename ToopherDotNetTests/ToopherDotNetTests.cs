@@ -446,15 +446,6 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void GeneratePairingLinkTest ()
-		{
-			var api = getApi ();
-			WebClientMock.ReturnValue = @"{""reset_authorization"":""abcde"", ""url"":""http://testonly/pairings/1/reset?reset_authorization=abcde""}}";
-			string pairingResetLink = api.GetPairingResetLink ("1");
-			Assert.AreEqual (pairingResetLink, "http://testonly/pairings/1/reset?reset_authorization=abcde");
-		}
-
-		[Test]
 		public void GenerateAdvancedApiUsageFactory ()
 		{
 			var api = getApi();
