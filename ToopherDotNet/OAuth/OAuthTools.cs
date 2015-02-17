@@ -20,6 +20,12 @@ namespace OAuth
 
         private static readonly Random _random;
         private static readonly object _randomLock = new object();
+        private static string nonceOverride;
+
+        public static void SetNonceOverride (string nonceOverride)
+        {
+          OAuthTools.nonceOverride = nonceOverride;
+        }
 
 #if !SILVERLIGHT
         private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
@@ -49,6 +55,9 @@ namespace OAuth
         /// <returns></returns>
         public static string GetNonce()
         {
+          if (nonceOverride != null){
+            return nonceOverride;
+          } else {
             const string chars = (Lower + Digit);
 
             var nonce = new char[16];
@@ -60,6 +69,7 @@ namespace OAuth
                 }
             }
             return new string(nonce);
+          }
         }
 
         /// <summary>
