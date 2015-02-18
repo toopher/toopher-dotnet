@@ -763,7 +763,6 @@ namespace Toopher
 		}
 	}
 
-	// Status information for an authentication request
 	public class AuthenticationRequest
 	{
 		private IDictionary<string, object> rawResponse;
@@ -816,12 +815,16 @@ namespace Toopher
 			return string.Format ("[AuthenticationRequest: id={0}; pending={1}; granted={2}; automated={3}; reasonCode={4}; reason={5}; actionId={6}; actionName={7}; terminalId={8}; terminalName={9}; terminalRequesterSpecifiedId={10}; userId={11}; userName={12}; userToopherAuthenticationEnabled={13}]", id, pending, granted, automated, reasonCode, reason, action.id, action.name, terminal.id, terminal.name, terminal.requesterSpecifiedId, user.id, user.name, user.toopherAuthenticationEnabled);
 		}
 
+		/// <summary>
+		/// Provide information about the status of an authentication request.
+		/// </summary>
+		/// <param name="response">The response from the API.</param>
+		/// <param name="toopherApi">The Toopher API associated with this authentication request.</param>
 		public AuthenticationRequest (IDictionary<string, object> response, ToopherApi toopherApi)
 		{
 			this.rawResponse = response;
 			this.api = toopherApi;
 			try {
-				// validate that the json has the minimum keys we need
 				this.id = (string)response["id"];
 				this.pending = (bool)response["pending"];
 				this.granted = (bool)response["granted"];
@@ -836,6 +839,9 @@ namespace Toopher
 			}
 		}
 
+		/// <summary>
+		/// Update the authentication request object with response from the API.
+		/// </summary>
 		public void RefreshFromServer ()
 		{
 			string endpoint = string.Format ("authentication_requests/{0}",  id);
@@ -843,6 +849,10 @@ namespace Toopher
 			Update (json);
 		}
 
+		/// <summary>
+		/// Grant the authentication request with an OTP.
+		/// </summary>
+		/// <param name="otp">One-time password for the authentication request.</param>
 		public void GrantWithOtp (string otp)
 		{
 			string endpoint = string.Format ("authentication_requests/{0}/otp_auth", id);
