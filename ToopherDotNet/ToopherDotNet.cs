@@ -23,7 +23,6 @@ namespace Toopher
 		private string baseUrl;
 		private string consumerKey;
 		private string consumerSecret;
-		private Type webClientProxyType;
 		private static DateTime? dateOverride;
 
 		public static void SetDateOverride (DateTime? dateOverride)
@@ -43,12 +42,7 @@ namespace Toopher
 			if (baseUrl != null) {
 				this.baseUrl = baseUrl;
 			} else {
-				this.baseUrl = ToopherApi.DEFAULT_BASE_URL;
-			}
-			if (webClientProxyType != null) {
-				this.webClientProxyType = webClientProxyType;
-			} else {
-				this.webClientProxyType = typeof(WebClientProxy);
+				this.baseUrl = DEFAULT_BASE_URL;
 			}
 		}
 

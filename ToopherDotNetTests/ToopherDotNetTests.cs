@@ -122,7 +122,7 @@ namespace ToopherDotNetTests
 
 		private ToopherIframe getToopherIframeApi ()
 		{
-			return new ToopherIframe (TOOPHER_CONSUMER_KEY, TOOPHER_CONSUMER_SECRET, DEFAULT_BASE_URL, typeof (WebClientMock));
+			return new ToopherIframe (TOOPHER_CONSUMER_KEY, TOOPHER_CONSUMER_SECRET, DEFAULT_BASE_URL);
 		}
 
 		[Test]
