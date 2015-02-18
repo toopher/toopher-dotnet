@@ -1030,6 +1030,11 @@ namespace Toopher
 			return string.Format ("[UserTerminal: id={0}; name={1}; requesterSpecifiedId={2}; userId={3}, userName={4}, userToopherAuthenticationEnabled={5}]", id, name, requesterSpecifiedId, user.id, user.name, user.toopherAuthenticationEnabled);
 		}
 
+		/// <summary>
+		/// Provide information about the status of a user terminal.
+		/// </summary>
+		/// <param name="response">The response from the API.</param>
+		/// <param name="toopherApi">The Toopher API associated with this authentication request.</param>
 		public UserTerminal (IDictionary<string, object> response, ToopherApi toopherApi)
 		{
 			this.rawResponse = response;
@@ -1044,6 +1049,9 @@ namespace Toopher
 			}
 		}
 
+		/// <summary>
+		/// Update the user terminal object with response from the API.
+		/// </summary>
 		public void RefreshFromServer ()
 		{
 			string endpoint = string.Format ("user_terminals/{0}", id);
@@ -1051,6 +1059,10 @@ namespace Toopher
 			Update (json);
 		}
 
+		/// <summary>
+		/// Update the user object with provided response.
+		/// </summary>
+		/// <param name="response">The response from the API.</param>
 		public void Update (IDictionary<string, object> response)
 		{
 			this.rawResponse = response;
