@@ -50,9 +50,9 @@ namespace Toopher
 				Console.WriteLine ("--------------------------------------");
 				Console.WriteLine ("Enter your requester credentials (from https://dev.toopher.com).");
 				Console.WriteLine ("Hint: set the TOOPHER_CONSUMER_SECRET and TOOPHER_CONSUMER_SECRET environment variables to avoid this prompt.");
-				Console.Write ("Consumer key: ");
+				Console.Write ("Consumer Key: ");
 				consumerKey = Console.ReadLine ();
-				Console.Write ("Consumer secret: ");
+				Console.Write ("Consumer Secret: ");
 				consumerSecret = Console.ReadLine ();
 			}
 			string baseUrl = System.Environment.GetEnvironmentVariable ("TOOPHER_BASE_URL");
@@ -61,31 +61,31 @@ namespace Toopher
 
 			Console.Write(String.Format("Enter a username to authenticate with Toopher [{0}]: ", DEFAULT_USERNAME));
 			string userName = Console.ReadLine ();
-			if (userName.Length == 0) {
+			if (string.IsNullOrEmpty(userName.Trim())) {
 				userName = DEFAULT_USERNAME;
 			}
-			string terminalIdentifier = random.Next().ToString();
+			string requesterSpecifiedId = random.Next().ToString();
 
 			state = STATE.AUTHENTICATE;
 			Pairing pairing = null;
-			AuthenticationRequest authStatus = null;
+			AuthenticationRequest authRequest = null;
 
 			while (true) {
 				switch (state) {
 					case STATE.AUTHENTICATE: {
 						try {
 							Console.WriteLine (String.Format ("\n\nAuthenticating user \"{0}\"", userName));
-							authStatus = api.Authenticate (userName, terminalIdentifier);
+							authRequest = api.Authenticate (userName, requesterSpecifiedId);
 							state = STATE.EVALUATE_AUTHENTICATION_STATUS;
-						} catch (UserDisabledError e) {
+						} catch (UserDisabledError) {
 							state = STATE.USER_DISABLED;
-						} catch (UserUnknownError e) {
+						} catch (UserUnknownError) {
 							Console.WriteLine ("That username is not yet paired.");
 							state = STATE.PAIR;
-						} catch (TerminalUnknownError e) {
+						} catch (TerminalUnknownError) {
 							Console.WriteLine ("First attempt to authenticate from an unknown terminal.");
 							state = STATE.NAME_TERMINAL;
-						} catch (PairingDeactivatedError e) {
+						} catch (PairingDeactivatedError) {
 							Console.WriteLine("The pairing has been deactivatied.");
 							state = STATE.PAIR;
 						} catch (RequestError e) {
@@ -103,49 +103,49 @@ namespace Toopher
 						if (response == "2") {
 							state = STATE.ENTER_OTP;
 						} else if (response == "3") {
-							state = STATE.RESET_PAIRING; 
+							state = STATE.RESET_PAIRING;
 						} else {
 
 							Console.WriteLine ("Checking status of authentication request...");
 							try {
-								authStatus = api.GetAuthenticationRequest (authStatus.id);
+								authRequest.RefreshFromServer();
 								state = STATE.EVALUATE_AUTHENTICATION_STATUS;
 							} catch (RequestError err) {
 								Console.WriteLine (String.Format ("Could not check authentication status (reason:{0})", err.Message));
 							}
 						}
-						
+
 						break;
 					};
 					case STATE.EVALUATE_AUTHENTICATION_STATUS: {
-						if (authStatus.pending) {
+						if (authRequest.pending) {
 							Console.WriteLine ("The authentication request has not received a response from the phone yet.");
 							state = STATE.POLL_FOR_AUTHENTICATION;
 						} else {
-							string automation = authStatus.automated ? "automatically " : "";
-							string result = authStatus.granted ? "granted" : "denied";
+							string automation = authRequest.automated ? "automatically " : "";
+							string result = authRequest.granted ? "granted" : "denied";
 							Console.WriteLine ("The request was " + automation + result + "!");
-							Console.WriteLine ("This request " + ((bool)authStatus["totp_valid"] ? "had" : "DID NOT HAVE") + " a valid authenticator OTP.");
+							Console.WriteLine ("This request " + ((bool)authRequest["totp_valid"] ? "had" : "DID NOT HAVE") + " a valid authenticator OTP.");
 
 							Console.WriteLine ();
 							if (yesNoPrompt("Simulate moving to a new terminal for next authentication request? (Ctrl-C to Exit) ", "N")){
-								// generate a new random terminalIdentifier
-								terminalIdentifier = random.Next ().ToString ();
+								// generate a new random requesterSpecifiedId
+								requesterSpecifiedId = random.Next ().ToString ();
 							}
 							state = STATE.AUTHENTICATE;
 						}
-						break;	
+						break;
 					};
 					case STATE.ENTER_OTP: {
-						Console.Write ("Please enter the Pairing OTP value generated in the Toopher Mobile App: ");
+						Console.Write ("Please enter the pairing OTP value generated in the Toopher Mobile App: ");
 						string otp = Console.ReadLine ().Trim ();
-						authStatus = api.GetAuthenticationRequest (authStatus.id, otp: otp);
+						authRequest.GrantWithOtp (otp);
 						state = STATE.EVALUATE_AUTHENTICATION_STATUS;
 						break;
 					};
 					case STATE.USER_DISABLED: {
 						if(yesNoPrompt("Toopher Authentication is disabled for that user.  Do you want to enable Toopher?", "Y")) {
-							api.SetToopherEnabledForUser (userName, true);
+							authRequest.user.EnableToopherAuthentication ();
 						}
 						state = STATE.AUTHENTICATE;
 						break;
@@ -159,7 +159,7 @@ namespace Toopher
 							Console.WriteLine ("Pairing phrases are generated on the mobile app");
 							Console.Write ("Enter pairing phrase: ");
 							pairingPhrase = Console.ReadLine ();
-							if (pairingPhrase.Length == 0) {
+							if (string.IsNullOrEmpty(pairingPhrase.Trim())) {
 								Console.WriteLine ("Please enter a pairing phrase to continue");
 							} else {
 								break;
@@ -167,7 +167,7 @@ namespace Toopher
 						}
 
 						try {
-							pairing = api.Pair (pairingPhrase, userName);
+							pairing = api.Pair (userName, pairingPhrase);
 							state = STATE.POLL_FOR_PAIRING;
 							break;
 						} catch (RequestError err) {
@@ -176,12 +176,14 @@ namespace Toopher
 						break;
 					};
 					case STATE.POLL_FOR_PAIRING: {
-						pairing = api.advanced.pairings.GetById (pairing.id);
-						if (pairing.enabled) {
+						pairing.RefreshFromServer();
+						if (pairing.pending) {
+							Console.WriteLine ("The pairing has not been authorized by the phone yet.");
+						} else if (pairing.enabled) {
 							Console.WriteLine ("Pairing complete");
 							state = STATE.AUTHENTICATE;
 						} else {
-							Console.WriteLine ("The pairing has not been authorized by the phone yet.");
+							Console.WriteLine ("The pairing has been denied.");
 						}
 						break;
 					};
@@ -194,7 +196,12 @@ namespace Toopher
 							Console.Write ("Answer  : ");
 							securityAnswer = Console.ReadLine ().Trim ();
 						}
-						string reset_url = api.GetPairingResetLink (((IDictionary<String, Object>)authStatus["pairing"])["id"].ToString (), securityQuestion, securityAnswer);
+						Dictionary<string, string> extras = new Dictionary<string, string>()
+						{
+							{"security_question", securityQuestion},
+							{"security_answer", securityAnswer}
+						};
+						string reset_url = pairing.GetResetLink (extras);
 						Console.WriteLine (String.Format ("Created a One-Time Pairing Reset link: {0}", reset_url));
 						if (yesNoPrompt ("Would you like to open this link in a browser?", "Y")) {
 							System.Diagnostics.Process.Start (reset_url);
@@ -202,19 +209,19 @@ namespace Toopher
 						Console.WriteLine ("Press [Enter] to continue...");
 						Console.ReadLine ();
 						state = STATE.AUTHENTICATE;
-							
+
 						break;
 					};
 					case STATE.NAME_TERMINAL: {
 						Console.Write (String.Format ("Enter a terminal name for this authentication request [\"{0}\"]: ", DEFAULT_TERMINAL_NAME));
 						string terminalName = Console.ReadLine ();
-						if (terminalName.Length == 0) {
+						if (string.IsNullOrEmpty(terminalName.Trim())) {
 							terminalName = DEFAULT_TERMINAL_NAME;
 						}
 						try {
-							api.CreateUserTerminal(userName, terminalName, terminalIdentifier);
+							api.advanced.userTerminals.Create(userName, terminalName, requesterSpecifiedId);
 						} catch(RequestError e) {
-							Console.WriteLine (String.Format ("could not create terminal (reason:{0})", e.Message));
+							Console.WriteLine (String.Format ("Could not create terminal (reason:{0})", e.Message));
 						}
 						state = STATE.AUTHENTICATE;
 						break;
@@ -222,13 +229,13 @@ namespace Toopher
 					default: {
 						Console.WriteLine (String.Format ("Unknown state {0}", state));
 						state = STATE.AUTHENTICATE;
-						break;	
+						break;
 					};
 				}
 
 			}
-			
+
 		}
-			
+
 	}
 }
