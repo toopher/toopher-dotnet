@@ -21,17 +21,20 @@ namespace Toopher
 			string consumerKey = System.Environment.GetEnvironmentVariable ("TOOPHER_CONSUMER_KEY");
 			string consumerSecret = System.Environment.GetEnvironmentVariable ("TOOPHER_CONSUMER_SECRET");
 			if ((consumerKey == null) || (consumerSecret == null)) {
+				Console.WriteLine ("Setup Credentials");
+				Console.WriteLine ("--------------------------------------");
 				Console.WriteLine ("Enter your requester credentials (from https://dev.toopher.com).");
-				Console.WriteLine ("Hint: set the TOOPHER_CONSUMER_SECRET and TOOPHER_CONSUMER_SECRET environment variables to avoid this prompt.");
-				Console.Write ("Consumer key: ");
+				Console.WriteLine ("Hint: Set the TOOPHER_CONSUMER_SECRET and TOOPHER_CONSUMER_SECRET environment variables to avoid this prompt.");
+				Console.Write ("Consumer Key: ");
 				consumerKey = Console.ReadLine ();
-				Console.Write ("Consumer secret: ");
+				Console.Write ("Consumer Secret: ");
 				consumerSecret = Console.ReadLine ();
 			}
 			string baseUrl = System.Environment.GetEnvironmentVariable ("TOOPHER_BASE_URL");
 
 			api = new Toopher.ToopherApi (consumerKey, consumerSecret, baseUrl);
 
+			Pairing pairing;
 			string pairingId;
 			while (true) {
 				string pairingPhrase;
@@ -42,7 +45,7 @@ namespace Toopher
 					Console.Write ("Enter pairing phrase: ");
 					pairingPhrase = Console.ReadLine ();
 
-					if (pairingPhrase.Length == 0) {
+					if (string.IsNullOrEmpty(pairingPhrase.Trim())) {
 						Console.WriteLine ("Please enter a pairing phrase to continue");
 					} else {
 						break;
@@ -51,18 +54,18 @@ namespace Toopher
 
 				Console.Write (String.Format ("Enter a username for this pairing [{0}]: ", DEFAULT_USERNAME));
 				string userName = Console.ReadLine ();
-				if (userName.Length == 0) {
+				if (string.IsNullOrEmpty(userName.Trim())) {
 					userName = DEFAULT_USERNAME;
 				}
 
 				Console.WriteLine ("Sending pairing request...");
 
 				try {
-					var pairing = api.Pair (pairingPhrase, userName);
+					pairing = api.Pair (userName, pairingPhrase);
 					pairingId = pairing.id;
 					break;
 				} catch (RequestError err) {
-					System.Console.WriteLine (String.Format ("The pairing phrase was not accepted (reason:{0})", err.Message));
+					System.Console.WriteLine (String.Format ("The pairing phrase was not accepted (Reason: {0})", err.Message));
 				}
 			}
 
@@ -72,12 +75,15 @@ namespace Toopher
 				Console.WriteLine ("Checking status of pairing request...");
 
 				try {
-					var pairing = api.advanced.pairings.GetById (pairingId);
-					if (pairing.enabled) {
+					pairing.RefreshFromServer();
+					if (pairing.pending) {
+						Console.WriteLine ("The pairing has not been authorized by the phone yet.");
+					} else if (pairing.enabled) {
 						Console.WriteLine ("Pairing complete");
 						break;
 					} else {
-						Console.WriteLine ("The pairing has not been authorized by the phone yet.");
+						Console.WriteLine ("The pairing has been denied.");
+						Environment.Exit(0);
 					}
 				} catch (RequestError err) {
 					Console.WriteLine (String.Format ("Could not check pairing status (reason:{0})", err.Message));
@@ -89,16 +95,15 @@ namespace Toopher
 				Console.WriteLine ("--------------------------------------");
 				Console.Write (String.Format ("Enter a terminal name for this authentication request [\"{0}\"]: ", DEFAULT_TERMINAL_NAME));
 				string terminalName = Console.ReadLine ();
-				if (terminalName.Length == 0) {
+				if (string.IsNullOrEmpty(terminalName.Trim())) {
 					terminalName = DEFAULT_TERMINAL_NAME;
 				}
 
 				Console.WriteLine ("Sending authentication request...");
 
-				string requestId;
+				AuthenticationRequest authRequest;
 				try {
-					var requestStatus = api.Authenticate (pairingId, terminalName);
-					requestId = requestStatus.id;
+					authRequest = api.Authenticate (pairingId, terminalName);
 				} catch (RequestError err) {
 					Console.WriteLine (String.Format ("Error initiating authentication (reason:{0})", err.Message));
 					continue;
@@ -109,21 +114,20 @@ namespace Toopher
 					Console.ReadLine ();
 					Console.WriteLine ("Checking status of authentication request...");
 
-					AuthenticationRequest requestStatus;
 					try {
-						requestStatus = api.GetAuthenticationRequest (requestId);
+						authRequest.RefreshFromServer();
 					} catch (RequestError err) {
 						Console.WriteLine (String.Format ("Could not check authentication status (reason:{0})", err.Message));
 						continue;
 					}
 
-					if (requestStatus.pending) {
+					if (authRequest.pending) {
 						Console.WriteLine ("The authentication request has not received a response from the phone yet.");
 					} else {
-						string automation = requestStatus.automated ? "automatically " : "";
-						string result = requestStatus.granted ? "granted" : "denied";
+						string automation = authRequest.automated ? "automatically " : "";
+						string result = authRequest.granted ? "granted" : "denied";
 						Console.WriteLine ("The request was " + automation + result + "!");
-						Console.WriteLine ("This request " + ((bool)requestStatus["totp_valid"] ? "had" : "DID NOT HAVE") + " a valid authenticator OTP.");
+						Console.WriteLine ("This request " + ((bool)authRequest["totp_valid"] ? "had" : "DID NOT HAVE") + " a valid authenticator OTP.");
 						break;
 					}
 				}
