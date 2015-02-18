@@ -914,6 +914,11 @@ namespace Toopher
 			return string.Format ("[User: id={0}; name={1}; toopherAuthenticationEnabled={2}]", id, name, toopherAuthenticationEnabled);
 		}
 
+		/// <summary>
+		/// Provide information about the status of a user.
+		/// </summary>
+		/// <param name="response">The response from the API.</param>
+		/// <param name="toopherApi">The Toopher API associated with this authentication request.</param>
 		public User (IDictionary<string, object> response, ToopherApi toopherApi)
 		{
 			this.rawResponse = response;
@@ -927,6 +932,9 @@ namespace Toopher
 			}
 		}
 
+		/// <summary>
+		/// Update the user object with response from the API.
+		/// </summary>
 		public void RefreshFromServer ()
 		{
 			string endpoint = string.Format ("users/{0}", id);
@@ -934,6 +942,10 @@ namespace Toopher
 			Update (json);
 		}
 
+		/// <summary>
+		/// Update the user object with provided response.
+		/// </summary>
+		/// <param name="response">The response from the API.</param>
 		public void Update (IDictionary<string, object> response)
 		{
 			this.rawResponse = response;
@@ -945,6 +957,9 @@ namespace Toopher
 			}
 		}
 
+		/// <summary>
+		/// Enable Toopher Authentication for an individual user.
+		/// </summary>
 		public void EnableToopherAuthentication ()
 		{
 			string endpoint = string.Format ("users/{0}", id);
@@ -954,6 +969,11 @@ namespace Toopher
 			Update (json);
 		}
 
+		/// <summary>
+		/// Disable Toopher Authentication for an individual user.  If the user is
+		/// disabled, future attempts to authenticate the user with Toopher will return
+		/// a UserDisabledError.
+		/// </summary>
 		public void DisableToopherAuthentication ()
 		{
 			string endpoint = string.Format ("users/{0}", id);
@@ -963,6 +983,9 @@ namespace Toopher
 			Update (json);
 		}
 
+		/// <summary>
+		/// Remove all pairings for the user.
+		/// </summary>
 		public void Reset ()
 		{
 			string endpoint = "users/reset";
