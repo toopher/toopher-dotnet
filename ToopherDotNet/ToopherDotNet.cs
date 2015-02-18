@@ -639,7 +639,6 @@ namespace Toopher
 	}
 
 
-	// Status information for a pairing request
 	public class Pairing
 	{
 		private IDictionary<string, Object> rawResponse;
@@ -675,6 +674,11 @@ namespace Toopher
 			return string.Format ("[Pairing: id={0}; enabled={1}; pending={2}; userId={3}; userName={4}; userToopherAuthenticationEnabled={5}]", id, enabled, pending, user.id, user.name, user.toopherAuthenticationEnabled);
 		}
 
+		/// <summary>
+		/// Provide information about the status of a pairing.
+		/// </summary>
+		/// <param name="response">The response from the API.</param>
+		/// <param name="toopherApi">The Toopher API associated with this pairing.</param>
 		public Pairing (IDictionary<string, object> response, ToopherApi toopherApi)
 		{
 			this.rawResponse = response;
@@ -689,6 +693,9 @@ namespace Toopher
 			}
 		}
 
+		/// <summary>
+		/// Update the pairing object with response from the API.
+		/// </summary>
 		public void RefreshFromServer ()
 		{
 			string endpoint = string.Format ("pairings/{0}", id);
@@ -696,6 +703,11 @@ namespace Toopher
 			Update (json);
 		}
 
+		/// <summary>
+		/// Retrieve link to allow user to reset the pairing.
+		/// </summary>
+		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
+		/// <returns>A reset link as a string</returns>
 		public string GetResetLink (Dictionary<string, string> extras = null)
 		{
 			string endpoint = string.Format ("pairings/{0}/generate_reset_link", id);
@@ -709,6 +721,11 @@ namespace Toopher
 			return (string)json["url"];
 		}
 
+		/// <summary>
+		/// Send reset link to user via email.
+		/// </summary>
+		/// <param name="email">The email address where the reset link is sent.</param>
+		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
 		public void EmailResetLink (string email, Dictionary<string, string> extras = null)
 		{
 			string endpoint = string.Format ("pairings/{0}/send_reset_link", id);
@@ -722,6 +739,10 @@ namespace Toopher
 			api.advanced.raw.post(endpoint, parameters);
 		}
 
+		/// <summary>
+		/// Retrieve QR code image for the pairing.
+		/// </summary>
+		/// <returns>QR code image stored as a byte[].</returns>
 		public byte[] GetQrCodeImage ()
 		{
 			string endpoint = string.Format ("qr/pairings/{0}", id);
