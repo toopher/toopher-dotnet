@@ -243,22 +243,18 @@ namespace Toopher
 		public const string DEFAULT_BASE_URL = "https://api.toopher.com/v1/";
 		public ToopherApi.AdvancedApiUsageFactory advanced;
 
-		string consumerKey;
-		string consumerSecret;
-		string baseUrl;
-		Type webClientProxyType;
+		private string consumerKey;
+		private string consumerSecret;
+		private string baseUrl;
+		private Type webClientProxyType;
 
-		// Create the ToopherApi object tied to your requester credentials
-		//
-		// Credentials are available on https://dev.toopher.com
 		/// <summary>
-		/// Create a new instance of the ToopherApi client tied to your requester
-		/// credentials.  Credentials are available at https://dev.toopher.com
+		/// Create an instance of the ToopherAPI helper for the specified API URL.
 		/// </summary>
-		/// <param name="consumerKey">OAuth Consumer Key</param>
-		/// <param name="consumerSecret">OAuth Consumer Secret</param>
-		/// <param name="baseUrl">Override url for ToopherApi webservice (default=https://api.toopher.com/v1/) </param>
-		/// <param name="webClientType">Override WebClient class for testing purposes</param>
+		/// <param name="consumerKey">Your Toopher API OAuth Consumer Key</param>
+		/// <param name="consumerSecret">Your Toopher API OAuth Consumer Secret</param>
+		/// <param name="baseUrl">The base URL of the Toopher API to target. If blank, the default is "https://api.toopher.com/v1/".</param>
+		/// <param name="webClientType">The type of web client. Override WebClient class for testing. If blank, the default is WebClientProxy.</param>
 		public ToopherApi (string consumerKey, string consumerSecret, string baseUrl = null, Type webClientProxyType = null)
 		{
 			this.advanced = new ToopherApi.AdvancedApiUsageFactory(this);
@@ -276,11 +272,16 @@ namespace Toopher
 			}
 		}
 
-		// Create an SMS pairing, QR pairing or regular pairing
-		//
-		// Must provide a username and phone number for an SMS pairing
-		// Must provide a username for a QR pairing
-		// Must provide a username and pairing phrase for a regular pairing
+		/// <summary>
+		/// Create an SMS pairing, QR pairing or regular pairing.
+		/// <para>Must provide a username and phone number for an SMS pairing.
+		/// <para>Must provide a username for a QR pairing.
+		/// <para>Must provide a username and pairing phrase for a regular pairing.
+		/// </summary>
+		/// <param name="userName">A user-facing descriptive name for the user (displayed in requests).</param>
+		/// <param name="pairingPhraseOrNum">The pairing phrase or phone number supplied by the user.</param>
+		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
+		/// <returns>A <see cref="Pairing"/> object.</returns>
 		public Pairing Pair (string userName, string pairingPhraseOrNum = null, Dictionary<string, string> extras = null)
 		{
 			string endpoint;
@@ -310,11 +311,14 @@ namespace Toopher
 			return new Pairing (json, this);
 		}
 
-		// Initiate an authentication request by pairing id or username
-		//
-		// Provide pairing ID or username, a name for the terminal (displayed to user) or requester-specified ID,
-		// an optional action name (displayed to user) [defaults to "log in"] and
-		// an optional Dictionary of extras to be sent to the API
+		/// <summary>
+		/// Initiate an authentication request by pairing id or username
+		/// </summary>
+		/// <param name="pairingIdOrUsername">The pairing id or username indicating whom the request should be sent to.</param>
+		/// <param name="terminalNameOrTerminalNameExtra">The user-facing descriptive name for the terminal from which the request originates or the unique identifier for this terminal. Not displayed to the user.</param>
+		/// <param name="actionName">The user-facing descriptive name for the action which is being authenticated.</param>
+		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
+		/// <returns>An <see cref="AuthenticationRequest"/> object.</returns>
 		public AuthenticationRequest Authenticate (string pairingIdOrUsername, string terminalNameOrTerminalNameExtra, string actionName = null, Dictionary<string, string> extras = null)
 		{
 			string endpoint = "authentication_requests/initiate";
@@ -369,6 +373,11 @@ namespace Toopher
 					this.api = toopherApi;
 				}
 
+				/// <summary>
+				/// Retrieve the current status of a pairing.
+				/// </summary>
+				/// <param name="pairingId">The unique id for a pairing.</param>
+				/// <returns>A <see cref="Pairing"/> object.</returns>
 				public Pairing GetById (string pairingId)
 				{
 					string endpoint = string.Format ("pairings/{0}", pairingId);
@@ -386,6 +395,11 @@ namespace Toopher
 					this.api = toopherApi;
 				}
 
+				/// <summary>
+				/// Retrieve the current status of an authenticationrequest.
+				/// </summary>
+				/// <param name="authenticationRequestId">The unique id for an authentication request.</param>
+				/// <returns>A <see cref="AuthenticationRequest"/> object.</returns>
 				public AuthenticationRequest GetById (string authenticationRequestId)
 				{
 					string endpoint = string.Format ("authentication_requests/{0}", authenticationRequestId);
@@ -403,6 +417,11 @@ namespace Toopher
 					this.api = toopherApi;
 				}
 
+				/// <summary>
+				/// Retrieve the current status of a user with the user id.
+				/// </summary>
+				/// <param name="userId">The unique id for a user.</param>
+				/// <returns>A <see cref="User"/> object.</returns>
 				public User GetById (string userId)
 				{
 					string endpoint = string.Format ("users/{0}", userId);
@@ -410,6 +429,12 @@ namespace Toopher
 					return new User (json, api);
 				}
 
+
+				/// <summary>
+				/// Retrieve the current status of a user with the user name.
+				/// </summary>
+				/// <param name="userName">The name of the user.</param>
+				/// <returns>A <see cref="User"/> object.</returns>
 				public User GetByName (string userName)
 				{
 					string endpoint = "users";
@@ -428,6 +453,12 @@ namespace Toopher
 					return GetById (userId);
 				}
 
+				/// <summary>
+				/// Create a new user with a user name.
+				/// </summary>
+				/// <param name="userName">The name of the user.</param>
+				/// <param name="parameters">An optional collection of parameters to provide to the API.</param>
+				/// <returns>A <see cref="User"/> object.</returns>
 				public User Create (string userName, NameValueCollection parameters = null)
 				{
 					string endpoint = "users/create";
@@ -449,6 +480,11 @@ namespace Toopher
 					this.api = toopherApi;
 				}
 
+				/// <summary>
+				/// Retrieve the current status of a user terminal.
+				/// </summary>
+				/// <param name="userTerminalId">The unique id for a user terminal.</param>
+				/// <returns>A <see cref="UserTerminal"/> object.</returns>
 				public UserTerminal GetById (string userTerminalId)
 				{
 					string endpoint = string.Format ("user_terminals/{0}", userTerminalId);
@@ -456,6 +492,14 @@ namespace Toopher
 					return new UserTerminal (json, api);
 				}
 
+				/// <summary>
+				/// Create a new user terminal
+				/// </summary>
+				/// <param name="userName">The name of the user.</param>
+				/// <param name="terminalName">The user-facing descriptive name for the terminal from which the request originates</param>
+				/// <param name="requesterSpecifiedId">The requester specified id that uniquely idenfities this terminal.</param>
+				/// <param name="paramters">An optional collection of parameters to provide to the API.</param>
+				/// <returns>A <see cref="UserTerminal"/> object.</returns>
 				public UserTerminal Create (string userName, string terminalName, string requesterSpecifiedId, NameValueCollection parameters = null)
 				{
 					string endpoint = "user_terminals/create";
