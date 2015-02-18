@@ -313,13 +313,14 @@ namespace Toopher
 
 		/// <summary>
 		/// Initiate an authentication request by pairing id or username
+		/// <para>Must provide a pairing id and terminal name or username and requester specified id
 		/// </summary>
 		/// <param name="pairingIdOrUsername">The pairing id or username indicating whom the request should be sent to.</param>
-		/// <param name="terminalNameOrTerminalNameExtra">The user-facing descriptive name for the terminal from which the request originates or the unique identifier for this terminal. Not displayed to the user.</param>
+		/// <param name="terminalNameOrRequesterSpecifiedId">The user-facing descriptive name for the terminal from which the request originates or the unique identifier for this terminal. Not displayed to the user.</param>
 		/// <param name="actionName">The user-facing descriptive name for the action which is being authenticated.</param>
 		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
 		/// <returns>An <see cref="AuthenticationRequest"/> object.</returns>
-		public AuthenticationRequest Authenticate (string pairingIdOrUsername, string terminalNameOrTerminalNameExtra, string actionName = null, Dictionary<string, string> extras = null)
+		public AuthenticationRequest Authenticate (string pairingIdOrUsername, string terminalNameOrRequesterSpecifiedId, string actionName = null, Dictionary<string, string> extras = null)
 		{
 			string endpoint = "authentication_requests/initiate";
 			NameValueCollection parameters = new NameValueCollection ();
@@ -327,10 +328,10 @@ namespace Toopher
 			try {
 				new Guid(pairingIdOrUsername);
 				parameters.Add ("pairing_id", pairingIdOrUsername);
-				parameters.Add ("terminal_name", terminalNameOrTerminalNameExtra);
+				parameters.Add ("terminal_name", terminalNameOrRequesterSpecifiedId);
 			} catch (Exception) {
 				parameters.Add ("user_name", pairingIdOrUsername);
-				parameters.Add ("terminal_name_extra", terminalNameOrTerminalNameExtra);
+				parameters.Add ("requester_specified_terminal_id", terminalNameOrRequesterSpecifiedId);
 			}
 
 			if (actionName != null && actionName.Length > 0) {

@@ -378,7 +378,7 @@ namespace ToopherDotNetTests
 			AuthenticationRequest auth = api.Authenticate ("some other user", "requester specified id", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some other user");
-			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name_extra"], "requester specified id");
+			Assert.AreEqual (WebClientMock.LastRequestData["requester_specified_terminal_id"], "requester specified id");
 			Assert.AreEqual (WebClientMock.LastRequestData["random_key"], "42");
 			Assert.AreEqual (auth.id, "1");
 		}
