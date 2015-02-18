@@ -14,6 +14,10 @@ using System.Security.Cryptography;
 
 namespace Toopher
 {
+	/// <summary>
+	/// DotNet helper library to generate Toopher iFrame requests and validate responses.
+	/// Register at https://dev.toopher.com to get your Toopher Developer API Credentials.
+	/// </summary>
 	public class ToopherIframe
 	{
 		public const string IFRAME_VERSION = "2";
@@ -35,7 +39,13 @@ namespace Toopher
 			return dateOverride ?? DateTime.UtcNow;
 		}
 
-		public ToopherIframe (string consumerKey, string consumerSecret, string baseUrl = null, Type webClientProxyType = null)
+		/// <summary>
+		/// Create an instance of the ToopherIframe helper for the specified API URL.
+		/// </summary>
+		/// <param name="consumerKey">Your Toopher API OAuth Consumer Key.</param>
+		/// <param name="consumerSecret">Your Toopher API OAuth Consumer Secret.</param>
+		/// <param name="baseUrl">The base URL of the Toopher API to target. If blank, the default is "https://api.toopher.com/v1/".</param>
+		public ToopherIframe (string consumerKey, string consumerSecret, string baseUrl = null)
 		{
 			this.consumerKey = consumerKey;
 			this.consumerSecret = consumerSecret;
@@ -46,6 +56,16 @@ namespace Toopher
 			}
 		}
 
+		/// <summary>
+		/// Generate a URL to retrieve a Toopher Authentication iFrame for a given user.
+		/// </summary>
+		/// <param name="userName">Unique name that identifies this user. This will be displayed to the user on their mobile device when they pair or authenticate.</param>
+		/// <param name="resetEmail">Email adddress that the user has access to. In case the user has lost or cannot access their mobile device, Toopher will send a reset email to this address.</param>
+		/// <param name="requestToken">Optional, can be empty. Toopher will include this token in the signed data returned with the iFrame response.</param>
+		/// <param name="actionName">The name of the action to authenticate; will be shown to the user. If blank, the Toopher API will default the action to "Log In".</param>
+		/// <param name="requesterMetadata">Optional, can be empty. Toopher will include this value in the signed data returned with the iFrame response.</param>
+		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
+		/// <returns>A string URL that can be used to retrieve the Authentication iFrame by the user's browser.</returns>
 		public string GetAuthenticationUrl (string userName, string resetEmail, string requestToken, string actionName = "Log In", string requesterMetadata = "None", Dictionary<string, string> extras = null)
 		{
 			NameValueCollection parameters = new NameValueCollection ();
@@ -73,6 +93,13 @@ namespace Toopher
 			return GetOauthUrl (baseUrl + "web/authenticate", parameters);
 		}
 
+		/// <summary>
+		/// Generate a URL to retrieve a Toopher Pairing iFrame for a given user.
+		/// </summary>
+		/// <param name="userName">Unique name that identifies this user. This will be displayed to the user on their mobile device when they pair or authenticate.</param>
+		/// <param name="resetEmail">Email address that the user has access to. In case the user has lost or cannot access their mobile device, Toopher will send a reset email to this address.</param>
+		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
+		/// <returns>A string URL that can be used to retrieve the Pairing iFrame by the user's browser.</reeturns>
 		public string GetUserManagementUrl (string userName, string resetEmail, Dictionary<string, string> extras = null)
 		{
 			NameValueCollection parameters = new NameValueCollection ();
@@ -97,13 +124,20 @@ namespace Toopher
 			return GetOauthUrl (baseUrl + "web/manage_user", parameters);
 		}
 
-		public Dictionary<string, string> ValidatePostback (Dictionary<string, string[]> extras, string sessionToken, long ttl)
+		/// <summary>
+		/// Verify the authenticity of data returned from the Toopher iFrame by validating the crytographic signature.
+		/// </summary>
+		/// <param name="params">The data returned from the iFrame.</param>
+		/// <param name="sessionToken">The session token</param>
+		/// <param name="ttl">Time-To-Live (seconds) to enforce on the Toopher API signature. This value sets the maximum duration between the Toopher API creating the signature and the signature being validated on your server.</param>
+		/// <returns>A Dictionary of the validated data if the signature is valid, or null if the signature is invalid.</returns>
+		public Dictionary<string, string> ValidatePostback (Dictionary<string, string[]> parameters, string sessionToken, long ttl)
 		{
 			try {
 				List<string> missingKeys = new List<string> ();
 				Dictionary<string, string> data = new Dictionary<string, string>();
 
-				foreach (var entry in extras)
+				foreach (var entry in parameters)
 				{
 					if (entry.Value.Length > 0) {
 						data.Add(entry.Key, entry.Value[0]);
