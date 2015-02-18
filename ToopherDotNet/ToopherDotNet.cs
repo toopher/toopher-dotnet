@@ -1180,7 +1180,7 @@ namespace Toopher
 	/// <summary>
 	/// Design-For-Testability shims from here on down...
 	/// </summary>
-	
+
 	public class WebClientProxy : IDisposable
 	{
 		WebClient _theClient = new WebClient ();
@@ -1255,4 +1255,3 @@ namespace Toopher
 	}
 
 }
-
