@@ -1103,6 +1103,10 @@ namespace Toopher
 			return string.Format ("[Action: id={0}; name={1}]", id, name);
 		}
 
+		/// <summary>
+		/// Provide information about the status of an action.
+		/// </summary>
+		/// <param name="response">The response from the API.</param>
 		public Action (IDictionary<string, object> response)
 		{
 			this.rawResponse = response;
@@ -1114,6 +1118,10 @@ namespace Toopher
 			}
 		}
 
+		/// <summary>
+		/// Update the user object with provided response.
+		/// </summary>
+		/// <param name="response">The response from the API.</param>
 		public void Update (IDictionary<string, object> response)
 		{
 			this.rawResponse = response;
