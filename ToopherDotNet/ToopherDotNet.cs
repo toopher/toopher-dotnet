@@ -169,7 +169,7 @@ namespace Toopher
 					var computedSig = Signature(consumerSecret, maybeSignature, data);
 					signatureValid = computedSig == maybeSignature;
 				} catch (Exception e) {
-					signatureValid = false;
+					throw new SignatureValidationError ("Error while calculating signature: " + e);
 				}
 
 				if (!signatureValid) {
