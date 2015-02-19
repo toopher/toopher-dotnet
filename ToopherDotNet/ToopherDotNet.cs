@@ -449,9 +449,7 @@ namespace Toopher
 					if (json.Count() == 0) {
 						throw new RequestError (string.Format ("No users with name {0}", userName));
 					}
-					var user = (JsonObject)json[0];
-					string userId = user["id"].ToString ();
-					return GetById (userId);
+					return new User((JsonObject)json[0], api);
 				}
 
 				/// <summary>
