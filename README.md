@@ -32,13 +32,21 @@ using Toopher;
 ToopherApi api = new ToopherApi("<your consumer key>", "<your consumer secret>");
 
 // Step 1 - Pair with their phone's Toopher app
-Pairing pairing = api.Pair("pairing phrase", "username@yourservice.com");
+// With pairing phrase
+Pairing pairing = api.Pair("username@yourservice.com", "pairing phrase");
+// With SMS
+Pairing pairing = api.Pair("username@yourservice.com", "555-555-5555");
+// With QR code
+Pairing pairing = api.Pair("username@yourservice.com");
 
 // Step 2 - Authenticate a log in
+// With a pairing id
 AuthenticationRequest auth = api.Authenticate(pairing.id, "my computer");
+// With a username
+AuthenticationRequest auth = api.Authenticate("username", "requesterSpecifiedId");
 
 // Once they've responded you can then check the status
-AuthenticationRequest status = api.GetAuthenticationRequest(auth.id);
+auth.RefreshFromServer();
 if (status.pending == false && status.granted == true) {
     // Success!
 }
