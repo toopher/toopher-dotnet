@@ -40,14 +40,14 @@ Pairing pairing = api.Pair("username@yourservice.com", "555-555-5555");
 Pairing pairing = api.Pair("username@yourservice.com");
 
 // Step 2 - Authenticate a log in
-// With a pairing id
+// With a pairing id and terminal name
 AuthenticationRequest auth = api.Authenticate(pairing.id, "my computer");
-// With a username
+// With a username and requester specified terminal id
 AuthenticationRequest auth = api.Authenticate("username", "requesterSpecifiedId");
 
 // Once they've responded you can then check the status
 auth.RefreshFromServer();
-if (status.pending == false && status.granted == true) {
+if (auth.pending == false && auth.granted == true) {
     // Success!
 }
 ```
