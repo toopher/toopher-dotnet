@@ -320,7 +320,7 @@ namespace Toopher
 		/// <param name="actionName">The user-facing descriptive name for the action which is being authenticated.</param>
 		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
 		/// <returns>An <see cref="AuthenticationRequest"/> object.</returns>
-		public AuthenticationRequest Authenticate (string pairingIdOrUsername, string terminalNameOrRequesterSpecifiedId, string actionName = null, Dictionary<string, string> extras = null)
+		public AuthenticationRequest Authenticate (string pairingIdOrUsername, string terminalName = null, string requesterSpecifiedId = null, string actionName = null, Dictionary<string, string> extras = null)
 		{
 			string endpoint = "authentication_requests/initiate";
 			NameValueCollection parameters = new NameValueCollection ();
@@ -328,12 +328,16 @@ namespace Toopher
 			try {
 				new Guid(pairingIdOrUsername);
 				parameters.Add ("pairing_id", pairingIdOrUsername);
-				parameters.Add ("terminal_name", terminalNameOrRequesterSpecifiedId);
 			} catch (Exception) {
 				parameters.Add ("user_name", pairingIdOrUsername);
-				parameters.Add ("requester_specified_terminal_id", terminalNameOrRequesterSpecifiedId);
 			}
 
+			if (terminalName != null && terminalName.Length > 0) {
+				parameters.Add ("terminal_name", terminalName);
+			}
+			if (requesterSpecifiedId != null && requesterSpecifiedId.Length > 0) {
+				parameters.Add ("requester_specified_terminal_id", requesterSpecifiedId);
+			}
 			if (actionName != null && actionName.Length > 0) {
 				parameters.Add ("action_name", actionName);
 			}

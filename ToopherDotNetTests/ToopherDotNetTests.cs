@@ -375,7 +375,7 @@ namespace ToopherDotNetTests
 		{
 			var api = getToopherApi ();
 			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
-			AuthenticationRequest auth = api.Authenticate ("some other user", "requester specified id", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
+			AuthenticationRequest auth = api.Authenticate ("some other user", requesterSpecifiedId: "requester specified id", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
 			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some other user");
 			Assert.AreEqual (WebClientMock.LastRequestData["requester_specified_terminal_id"], "requester specified id");
@@ -626,7 +626,7 @@ namespace ToopherDotNetTests
 			var api = getToopherApi ();
 			WebClientMock.ReturnException = makeError((HttpStatusCode)409,
 				@"{""error_code"":704, ""error_message"":""The specified user has disabled Toopher authentication.""}");
-			api.Authenticate ("some disabled user", "some random string");
+			api.Authenticate ("some disabled user", requesterSpecifiedId: "some random string");
 		}
 
 		[Test]
@@ -636,7 +636,7 @@ namespace ToopherDotNetTests
 			var api = getToopherApi ();
 			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
 				@"{""error_code"":705, ""error_message"":""No matching user exists.""}");
-			api.Authenticate ("some unknown user", "some random string");
+			api.Authenticate ("some unknown user", requesterSpecifiedId: "some random string");
 		}
 
 		[Test]
@@ -646,7 +646,7 @@ namespace ToopherDotNetTests
 			var api = getToopherApi ();
 			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
 				@"{""error_code"":706, ""error_message"":""No matching terminal exists.""}");
-			api.Authenticate ("some unknown user", "some random string");
+			api.Authenticate ("some unknown user", requesterSpecifiedId: "some random string");
 		}
 
 		[Test]
@@ -656,7 +656,7 @@ namespace ToopherDotNetTests
 			var api = getToopherApi ();
 			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
 				@"{""error_code"":601, ""error_message"":""This pairing has been deactivated.""}");
-			api.Authenticate ("some disabled user", "some random string");
+			api.Authenticate ("some disabled user", requesterSpecifiedId: "some random string");
 		}
 
 		[Test]
@@ -666,7 +666,7 @@ namespace ToopherDotNetTests
 			var api = getToopherApi ();
 			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
 				@"{""error_code"":601, ""error_message"":""This pairing has not been authorized to authenticate.""}");
-			api.Authenticate ("some unauthorized user", "some random string");
+			api.Authenticate ("some unauthorized user", requesterSpecifiedId: "some random string");
 		}
 	}
 

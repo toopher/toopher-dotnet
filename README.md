@@ -43,7 +43,7 @@ Pairing pairing = api.Pair("username@yourservice.com");
 // With a pairing id and terminal name
 AuthenticationRequest auth = api.Authenticate(pairing.id, "my computer");
 // With a username and requester specified terminal id
-AuthenticationRequest auth = api.Authenticate("username", "requesterSpecifiedId");
+AuthenticationRequest auth = api.Authenticate("username", requesterSpecifiedId: "requesterSpecifiedId");
 
 // Once they've responded you can then check the status
 auth.RefreshFromServer();
