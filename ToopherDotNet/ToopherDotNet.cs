@@ -352,6 +352,20 @@ namespace Toopher
 			return new AuthenticationRequest (json, this);
 		}
 
+		public class ToopherObjectFactory
+		{
+			public ToopherApi api
+			{
+				get;
+				private set;
+			}
+
+			public ToopherObjectFactory (ToopherApi toopherApi)
+			{
+				this.api = toopherApi;
+			}
+		}
+
 		public class AdvancedApiUsageFactory
 		{
 			public ToopherApi.AdvancedApiUsageFactory.Pairings pairings;
@@ -369,13 +383,10 @@ namespace Toopher
 				this.raw = new ToopherApi.AdvancedApiUsageFactory.ApiRawRequester(toopherApi);
 			}
 
-			public class Pairings
+			public class Pairings : ToopherObjectFactory
 			{
-				private ToopherApi api;
-
-				public Pairings (ToopherApi toopherApi)
+				public Pairings (ToopherApi toopherApi) : base(toopherApi)
 				{
-					this.api = toopherApi;
 				}
 
 				/// <summary>
@@ -391,13 +402,10 @@ namespace Toopher
 				}
 			}
 
-			public class AuthenticationRequests
+			public class AuthenticationRequests : ToopherObjectFactory
 			{
-				private ToopherApi api;
-
-				public AuthenticationRequests (ToopherApi toopherApi)
+				public AuthenticationRequests (ToopherApi toopherApi) : base(toopherApi)
 				{
-					this.api = toopherApi;
 				}
 
 				/// <summary>
@@ -413,13 +421,10 @@ namespace Toopher
 				}
 			}
 
-			public class Users
+			public class Users : ToopherObjectFactory
 			{
-				private ToopherApi api;
-
-				public Users (ToopherApi toopherApi)
+				public Users (ToopherApi toopherApi) : base(toopherApi)
 				{
-					this.api = toopherApi;
 				}
 
 				/// <summary>
@@ -474,13 +479,10 @@ namespace Toopher
 				}
 			}
 
-			public class UserTerminals
+			public class UserTerminals : ToopherObjectFactory
 			{
-				private ToopherApi api;
-
-				public UserTerminals (ToopherApi toopherApi)
+				public UserTerminals (ToopherApi toopherApi) : base(toopherApi)
 				{
-					this.api = toopherApi;
 				}
 
 				/// <summary>
