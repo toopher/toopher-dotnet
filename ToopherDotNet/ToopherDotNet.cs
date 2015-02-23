@@ -166,7 +166,7 @@ namespace Toopher
 				data.Remove("toopher_sig");
 				var signatureValid = false;
 				try {
-					var computedSig = Signature(consumerSecret, maybeSignature, data);
+					var computedSig = Signature(consumerSecret, data);
 					signatureValid = computedSig == maybeSignature;
 				} catch (Exception e) {
 					throw new SignatureValidationError ("Error while calculating signature: " + e);
@@ -203,15 +203,15 @@ namespace Toopher
 			return (int) t.TotalSeconds;
 		}
 
-		private static string Signature (string secret, string maybeSignature, Dictionary<string, string> data)
+		private static string Signature (string secret, Dictionary<string, string> data)
 		{
 			Dictionary<string, string> sortedData = data.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
 			string joinedString = string.Join("&", (sortedData.Select(d => d.Key + "=" + d.Value).ToArray()));
 
-			byte[] keyByte = Encoding.UTF8.GetBytes(secret);
+			byte[] keyBytes = Encoding.UTF8.GetBytes(secret);
 			byte[] messageBytes = Encoding.UTF8.GetBytes(joinedString);
 
-			using (var hmac = new HMACSHA1(keyByte))
+			using (var hmac = new HMACSHA1(keyBytes))
 			{
 				byte[] hashMessage = hmac.ComputeHash(messageBytes);
 				return Convert.ToBase64String(hashMessage);
