@@ -127,7 +127,6 @@ namespace Toopher
 						string automation = authRequest.automated ? "automatically " : "";
 						string result = authRequest.granted ? "granted" : "denied";
 						Console.WriteLine ("The request was " + automation + result + "!");
-						Console.WriteLine ("This request " + ((bool)authRequest["totp_valid"] ? "had" : "DID NOT HAVE") + " a valid authenticator OTP.");
 						break;
 					}
 				}
