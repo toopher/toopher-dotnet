@@ -714,10 +714,7 @@ namespace Toopher
 
 		public object this[string key]
 		{
-			get
-			{
-				return rawResponse[key];
-			}
+			get { return rawResponse[key]; }
 		}
 
 		public string id
@@ -846,10 +843,7 @@ namespace Toopher
 
 		public object this[string key]
 		{
-			get
-			{
-				return rawResponse[key];
-			}
+			get { return rawResponse[key]; }
 		}
 
 		public string id
@@ -967,10 +961,7 @@ namespace Toopher
 
 		public object this[string key]
 		{
-			get
-			{
-				return rawResponse[key];
-			}
+			get { return rawResponse[key]; }
 		}
 
 		public string id
@@ -1086,10 +1077,7 @@ namespace Toopher
 
 		public object this[string key]
 		{
-			get
-			{
-				return rawResponse[key];
-			}
+			get { return rawResponse[key]; }
 		}
 
 		public string id
@@ -1169,10 +1157,7 @@ namespace Toopher
 		private IDictionary<string, object> rawResponse;
 		public object this[string key]
 		{
-			get
-			{
-				return rawResponse[key];
-			}
+			get { return rawResponse[key]; }
 		}
 
 		public string id
@@ -1327,7 +1312,8 @@ namespace Toopher
 			} else if (typeof(HttpWebResponse).IsAssignableFrom(response.GetType()))
 			{
 				return new HttpWebResponseWrapper((HttpWebResponse)response);
-			} else {
+			} else
+			{
 				throw new NotImplementedException("Don't know how to transmute " + response.GetType().ToString() + " into IHttpWebResponse");
 			}
 		}
