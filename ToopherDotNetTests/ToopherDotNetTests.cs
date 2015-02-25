@@ -203,7 +203,7 @@ namespace ToopherDotNetTests
 			try {
 				Assert.IsNotNull(api.ValidatePostback(data, REQUEST_TOKEN, 5));
 			} catch (Exception) {
-				Assert.Fail("Valid signture, timestamp, and session token did not return validated data");
+				Assert.Fail("Valid signature, timestamp, and session token did not return validated data");
 			}
 		}
 
