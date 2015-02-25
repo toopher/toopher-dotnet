@@ -639,7 +639,6 @@ namespace Toopher
 							{
 								try
 								{
-									// Attempt to parse JSON response
 									var json = (JsonObject)SimpleJson.SimpleJson.DeserializeObject(error_message);
 									parseRequestError(json);
 								} catch (RequestError e)
