@@ -28,13 +28,13 @@ namespace ToopherDotNetTests
 			HttpStatusCode errorCode;
 			Stream responseStream;
 
-			public MockWebResponse (HttpStatusCode errorCode, string responseBody)
+			public MockWebResponse(HttpStatusCode errorCode, string responseBody)
 			{
 				this.errorCode = errorCode;
 				this.responseStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(responseBody));
 			}
 
-			override public Stream GetResponseStream ()
+			override public Stream GetResponseStream()
 			{
 				return responseStream;
 			}
@@ -49,10 +49,10 @@ namespace ToopherDotNetTests
 				get { return ""; }
 			}
 		}
-		public WebException makeError (HttpStatusCode errorCode, string responseBody)
+		public WebException makeError(HttpStatusCode errorCode, string responseBody)
 		{
-			WebResponse response = new MockWebResponse (errorCode, responseBody);
-			return new WebException ("", null, WebExceptionStatus.ProtocolError, response);
+			WebResponse response = new MockWebResponse(errorCode, responseBody);
+			return new WebException("", null, WebExceptionStatus.ProtocolError, response);
 		}
 		public class WebClientMock : WebClientProxy
 		{
@@ -61,25 +61,29 @@ namespace ToopherDotNetTests
 			static public Exception ReturnException { get; set; }
 			static public string ReturnValue { get; set; }
 			static public string ReturnValueArray { get; set; }
-			string doit ()
+			string doit()
 			{
-				if (ReturnException != null) {
+				if (ReturnException != null)
+				{
 					throw ReturnException;
-				} else if (ReturnValueArray != null) {
+				} else if (ReturnValueArray != null)
+				{
 					var values = ReturnValueArray;
 					ReturnValueArray = null;
 					return values;
-				} else {
+				} else
+				{
 					return ReturnValue;
 				}
 			}
 
-			override public byte[] UploadValues(string requestUri, string method, NameValueCollection parameters) {
+			override public byte[] UploadValues(string requestUri, string method, NameValueCollection parameters)
+			{
 				LastRequestMethod = "POST";
 				LastRequestData = parameters;
-				return System.Text.Encoding.UTF8.GetBytes (doit());
+				return System.Text.Encoding.UTF8.GetBytes(doit());
 			}
-			override public string DownloadString (string requestUri)
+			override public string DownloadString(string requestUri)
 			{
 				LastRequestMethod = "GET";
 				LastRequestData = this.QueryString;
@@ -88,7 +92,7 @@ namespace ToopherDotNetTests
 		}
 
 		[SetUp]
-		public virtual void Init ()
+		public virtual void Init()
 		{
 			WebClientMock.ReturnException = null;
 			WebClientMock.ReturnValue = null;
@@ -99,9 +103,9 @@ namespace ToopherDotNetTests
 			OAuthTools.SetDateOverride(null);
 		}
 
-		public ToopherApi getToopherApi ()
+		public ToopherApi getToopherApi()
 		{
-			return new ToopherApi ("key", "secret", null, typeof (WebClientMock));
+			return new ToopherApi("key", "secret", null, typeof(WebClientMock));
 		}
 	}
 
@@ -113,106 +117,108 @@ namespace ToopherDotNetTests
 		private DateTime TEST_DATE = new DateTime(1970, 1, 1, 0, 16, 40, 0);
 
 		[SetUp]
-		public override void Init ()
+		public override void Init()
 		{
 			ToopherIframe.SetDateOverride(null);
 			OAuthTools.SetNonceOverride(null);
 			OAuthTools.SetDateOverride(null);
 		}
 
-		private ToopherIframe getToopherIframeApi ()
+		private ToopherIframe getToopherIframeApi()
 		{
-			return new ToopherIframe (TOOPHER_CONSUMER_KEY, TOOPHER_CONSUMER_SECRET, DEFAULT_BASE_URL);
+			return new ToopherIframe(TOOPHER_CONSUMER_KEY, TOOPHER_CONSUMER_SECRET, DEFAULT_BASE_URL);
 		}
 
 		[Test]
-		public void ToopherIframeVersionTest ()
+		public void ToopherIframeVersionTest()
 		{
-			Assert.IsTrue (int.Parse(ToopherIframe.IFRAME_VERSION) >= 1);
+			Assert.IsTrue(int.Parse(ToopherIframe.IFRAME_VERSION) >= 1);
 		}
 
 		[Test]
-		public void ToopherBaseUrlTest ()
+		public void ToopherBaseUrlTest()
 		{
-			StringAssert.Contains ("https", ToopherIframe.DEFAULT_BASE_URL);
-			Assert.IsTrue (System.Uri.IsWellFormedUriString (ToopherIframe.DEFAULT_BASE_URL, System.UriKind.Absolute));
+			StringAssert.Contains("https", ToopherIframe.DEFAULT_BASE_URL);
+			Assert.IsTrue(System.Uri.IsWellFormedUriString(ToopherIframe.DEFAULT_BASE_URL, System.UriKind.Absolute));
 		}
 
 		[Test]
-		public void GetAuthenticationUrlTest ()
+		public void GetAuthenticationUrlTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			OAuthTools.SetNonceOverride (OAUTH_NONCE);
-			OAuthTools.SetDateOverride (TEST_DATE);
+			OAuthTools.SetNonceOverride(OAUTH_NONCE);
+			OAuthTools.SetDateOverride(TEST_DATE);
 			string expected = "https://api.toopher.test/v1/web/authenticate?action_name=Log+In&expires=1300&requester_metadata=None&reset_email=jdoe%40example.com&session_token=s9s7vsb&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=YN%2BkKNTaoypsB37fsjvMS8vsG5A%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
-			var authUrl = api.GetAuthenticationUrl ("jdoe", "jdoe@example.com", REQUEST_TOKEN);
-			Assert.AreEqual (expected, authUrl);
+			var authUrl = api.GetAuthenticationUrl("jdoe", "jdoe@example.com", REQUEST_TOKEN);
+			Assert.AreEqual(expected, authUrl);
 		}
 
 		[Test]
-		public void GetAuthenticationUrlWithExtrasTest ()
+		public void GetAuthenticationUrlWithExtrasTest()
 		{
 			Dictionary<string, string> extras = new Dictionary<string, string>();
 			extras.Add("allow_inline_pairing", "false");
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			OAuthTools.SetNonceOverride (OAUTH_NONCE);
-			OAuthTools.SetDateOverride (TEST_DATE);
+			OAuthTools.SetNonceOverride(OAUTH_NONCE);
+			OAuthTools.SetDateOverride(TEST_DATE);
 			string expected = "https://api.toopher.test/v1/web/authenticate?action_name=it+is+a+test&allow_inline_pairing=false&expires=1300&requester_metadata=None&reset_email=jdoe%40example.com&session_token=s9s7vsb&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=W%2F2dcdsVc7YgdSCZuEo8ViHLlOo%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
-			var authUrl = api.GetAuthenticationUrl ("jdoe", "jdoe@example.com", REQUEST_TOKEN, "it is a test", "None", extras);
-			Assert.AreEqual (expected, authUrl);
+			var authUrl = api.GetAuthenticationUrl("jdoe", "jdoe@example.com", REQUEST_TOKEN, "it is a test", "None", extras);
+			Assert.AreEqual(expected, authUrl);
 		}
 
 		[Test]
-		public void GetUserManagementUrlTest ()
+		public void GetUserManagementUrlTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			OAuthTools.SetNonceOverride (OAUTH_NONCE);
-			OAuthTools.SetDateOverride (TEST_DATE);
+			OAuthTools.SetNonceOverride(OAUTH_NONCE);
+			OAuthTools.SetDateOverride(TEST_DATE);
 			string expected = "https://api.toopher.test/v1/web/manage_user?expires=1300&reset_email=jdoe%40example.com&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=NjwH5yWPE2CCJL8v%2FMNknL%2BeTpE%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
-			var userManagementUrl = api.GetUserManagementUrl ("jdoe", "jdoe@example.com");
-			Assert.AreEqual (expected, userManagementUrl);
+			var userManagementUrl = api.GetUserManagementUrl("jdoe", "jdoe@example.com");
+			Assert.AreEqual(expected, userManagementUrl);
 		}
 
 		[Test]
-		public void GetUserManagementUrlWithExtrasTest ()
+		public void GetUserManagementUrlWithExtrasTest()
 		{
 			Dictionary<string, string> extras = new Dictionary<string, string>();
 			extras.Add("ttl", "100");
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			OAuthTools.SetNonceOverride (OAUTH_NONCE);
-			OAuthTools.SetDateOverride (TEST_DATE);
+			OAuthTools.SetNonceOverride(OAUTH_NONCE);
+			OAuthTools.SetDateOverride(TEST_DATE);
 			string expected = "https://api.toopher.test/v1/web/manage_user?expires=1100&reset_email=jdoe%40example.com&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=sV8qoKnxJ3fxfP6AHNa0eNFxzJs%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
-			var userManagementUrl = api.GetUserManagementUrl ("jdoe", "jdoe@example.com", extras);
-			Assert.AreEqual (expected, userManagementUrl);
+			var userManagementUrl = api.GetUserManagementUrl("jdoe", "jdoe@example.com", extras);
+			Assert.AreEqual(expected, userManagementUrl);
 		}
 
 		[Test]
-		public void ValidatePostbackWithGoodSignatureIsSuccessfulTest ()
+		public void ValidatePostbackWithGoodSignatureIsSuccessfulTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			Dictionary<string, string[]> data = new Dictionary<string, string[]>();
 			data.Add("foo", new string[]{"bar"});
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
 			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
-			try {
+			try
+			{
 				Assert.IsNotNull(api.ValidatePostback(data, REQUEST_TOKEN, 5));
-			} catch (Exception) {
+			} catch (Exception)
+			{
 				Assert.Fail("Valid signature, timestamp, and session token did not return validated data");
 			}
 		}
 
 		[Test]
-		public void ValidatePostbackWithBadSignatureFailsTest ()
+		public void ValidatePostbackWithBadSignatureFailsTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			Dictionary<string, string[]> data = new Dictionary<string, string[]>();
 			data.Add("foo", new string[]{"bar"});
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
@@ -222,11 +228,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void ValidatePostbackWithExpiredSignatureFailsTest ()
+		public void ValidatePostbackWithExpiredSignatureFailsTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(new DateTime(1970, 2, 1, 0, 16, 40, 0));
-			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			Dictionary<string, string[]> data = new Dictionary<string, string[]>();
 			data.Add("foo", new string[]{"bar"});
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
@@ -236,11 +242,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void ValidatePostbackWithInvalidSessionTokenFailsTest ()
+		public void ValidatePostbackWithInvalidSessionTokenFailsTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			Dictionary<string, string[]> data = new Dictionary<string, string[]>();
 			data.Add("foo", new string[]{"bar"});
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{"invalid token"});
@@ -250,11 +256,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void ValidatePostbackMissingTimestampFailsTest ()
+		public void ValidatePostbackMissingTimestampFailsTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			Dictionary<string, string[]> data = new Dictionary<string, string[]>();
 			data.Add("foo", new string[]{"bar"});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
 			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
@@ -263,11 +269,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void ValidatePostbackMissingSignatureFailsTest ()
+		public void ValidatePostbackMissingSignatureFailsTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			Dictionary<string, string[]> data = new Dictionary<string, string[]>();
 			data.Add("foo", new string[]{"bar"});
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
@@ -276,11 +282,11 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void ValidatePostbackMissingSessionTokenFailsTest ()
+		public void ValidatePostbackMissingSessionTokenFailsTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
-			Dictionary<string, string[]> data = new Dictionary<string, string[]> ();
+			Dictionary<string, string[]> data = new Dictionary<string, string[]>();
 			data.Add("foo", new string[]{"bar"});
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
@@ -293,7 +299,7 @@ namespace ToopherDotNetTests
 	public class ToopherApiTests : TestBase
 	{
 		[Test()]
-		public void ToopherVersionTest ()
+		public void ToopherVersionTest()
 		{
 			string[] strs = ToopherApi.VERSION.Split('.');
 			int major = int.Parse(strs[0]);
@@ -305,368 +311,368 @@ namespace ToopherDotNetTests
 		}
 
 		[Test()]
-		public void ToopherBaseUrlTest ()
+		public void ToopherBaseUrlTest()
 		{
-			StringAssert.Contains ("https", ToopherApi.DEFAULT_BASE_URL);
+			StringAssert.Contains("https", ToopherApi.DEFAULT_BASE_URL);
 			Assert.IsTrue(System.Uri.IsWellFormedUriString(ToopherApi.DEFAULT_BASE_URL, System.UriKind.Absolute));
 		}
 
 		[Test]
-		public void CreatePairingWithPhraseTest ()
+		public void CreatePairingWithPhraseTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
-			Pairing pairing = api.Pair ("some user", "awkward turtle");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["pairing_phrase"], "awkward turtle");
-			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some user");
-			Assert.AreEqual (pairing.id, "1");
+			Pairing pairing = api.Pair("some user", "awkward turtle");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["pairing_phrase"], "awkward turtle");
+			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some user");
+			Assert.AreEqual(pairing.id, "1");
 		}
 
 		[Test]
-		public void CreateSmsPairingTest ()
+		public void CreateSmsPairingTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
-			Pairing pairing = api.Pair ("some user", "555-555-5555");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["phone_number"], "555-555-5555");
-			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some user");
-			Assert.AreEqual (pairing.id, "1");
+			Pairing pairing = api.Pair("some user", "555-555-5555");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["phone_number"], "555-555-5555");
+			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some user");
+			Assert.AreEqual(pairing.id, "1");
 		}
 
 		[Test]
-		public void CreateQrPairingTest ()
+		public void CreateQrPairingTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
-			Pairing pairing = api.Pair ("some user");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some user");
-			Assert.AreEqual (pairing.id, "1");
+			Pairing pairing = api.Pair("some user");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some user");
+			Assert.AreEqual(pairing.id, "1");
 		}
 
 		[Test]
-		public void ArbitraryParametersOnPairTest ()
+		public void ArbitraryParametersOnPairTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
-			Pairing pairing = api.Pair ("awkward turtle", "some user", extras: new Dictionary<string,string>(){{"test_param", "42"}});
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
-			Assert.AreEqual (pairing.id, "1");
+			Pairing pairing = api.Pair("awkward turtle", "some user", extras: new Dictionary<string,string>(){{"test_param", "42"}});
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["test_param"], "42");
+			Assert.AreEqual(pairing.id, "1");
 		}
 
 		[Test]
-		public void AuthenticateWithPairingIdTest ()
+		public void AuthenticateWithPairingIdTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			string pairingId = Guid.NewGuid().ToString();
 			WebClientMock.ReturnValue = @"{""id"":""" + pairingId + @""", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"",""requester_specified_id"":""requesterSpecifiedId"",""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
 			AuthenticationRequest auth = api.Authenticate(pairingId, "test terminal");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["pairing_id"], pairingId);
-			Assert.AreEqual (WebClientMock.LastRequestData["terminal_name"], "test terminal");
-			Assert.AreEqual (auth.id, pairingId);
+			Assert.AreEqual(WebClientMock.LastRequestData["pairing_id"], pairingId);
+			Assert.AreEqual(WebClientMock.LastRequestData["terminal_name"], "test terminal");
+			Assert.AreEqual(auth.id, pairingId);
 		}
 
 		[Test]
-		public void AuthenticateWithUsernameAndExtrasTest ()
+		public void AuthenticateWithUsernameAndExtrasTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
-			AuthenticationRequest auth = api.Authenticate ("some other user", requesterSpecifiedId: "requester specified id", extras: new Dictionary<String, String>() {{ "random_key" , "42" }});
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["user_name"], "some other user");
-			Assert.AreEqual (WebClientMock.LastRequestData["requester_specified_terminal_id"], "requester specified id");
-			Assert.AreEqual (WebClientMock.LastRequestData["random_key"], "42");
-			Assert.AreEqual (auth.id, "1");
+			AuthenticationRequest auth = api.Authenticate("some other user", requesterSpecifiedId: "requester specified id", extras: new Dictionary<String, String>(){{ "random_key" , "42" }});
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some other user");
+			Assert.AreEqual(WebClientMock.LastRequestData["requester_specified_terminal_id"], "requester specified id");
+			Assert.AreEqual(WebClientMock.LastRequestData["random_key"], "42");
+			Assert.AreEqual(auth.id, "1");
 		}
 
 		[Test]
-		public void ArbitraryParamtersOnAuthenticateTest ()
+		public void ArbitraryParamtersOnAuthenticateTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
-			AuthenticationRequest auth = api.Authenticate ("1", "test terminal", extras: new Dictionary<string, string> () { { "test_param", "42" } });
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["test_param"], "42");
-			Assert.AreEqual (auth.id, "1");
+			AuthenticationRequest auth = api.Authenticate("1", "test terminal", extras: new Dictionary<string, string>(){{ "test_param", "42" }});
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["test_param"], "42");
+			Assert.AreEqual(auth.id, "1");
 		}
 
 		[Test]
-		public void GenerateAdvancedApiUsageFactory ()
+		public void GenerateAdvancedApiUsageFactory()
 		{
-			var api = getToopherApi ();
-			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory> (api.advanced);
+			var api = getToopherApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory>(api.advanced);
 		}
 
 		[Test]
-		public void GenerateAdvancedPairings ()
+		public void GenerateAdvancedPairings()
 		{
-			var api = getToopherApi ();
-			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.Pairings> (api.advanced.pairings);
+			var api = getToopherApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.Pairings>(api.advanced.pairings);
 		}
 
 		[Test]
-		public void GenerateAdvancedRaw ()
+		public void GenerateAdvancedRaw()
 		{
-			var api = getToopherApi ();
-			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.ApiRawRequester> (api.advanced.raw);
+			var api = getToopherApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.ApiRawRequester>(api.advanced.raw);
 		}
 
 		[Test]
-		public void GenerateAdvancedAuthenticationRequests ()
+		public void GenerateAdvancedAuthenticationRequests()
 		{
-			var api = getToopherApi ();
-			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests> (api.advanced.authenticationRequests);
+			var api = getToopherApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.AuthenticationRequests>(api.advanced.authenticationRequests);
 		}
 
 		[Test]
-		public void GenerateAdvancedUsers ()
+		public void GenerateAdvancedUsers()
 		{
-			var api = getToopherApi ();
-			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.Users> (api.advanced.users);
+			var api = getToopherApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.Users>(api.advanced.users);
 		}
 
 		[Test]
-		public void GenerateAdvancedUserTerminals ()
+		public void GenerateAdvancedUserTerminals()
 		{
-			var api = getToopherApi ();
-			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.UserTerminals> (api.advanced.userTerminals);
+			var api = getToopherApi();
+			Assert.IsInstanceOf<ToopherApi.AdvancedApiUsageFactory.UserTerminals>(api.advanced.userTerminals);
 		}
 
 		[Test]
-		public void AdvancedPairingsGetByIdTest ()
+		public void AdvancedPairingsGetByIdTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
-			Pairing pairing = api.advanced.pairings.GetById ("1");
-			Assert.IsInstanceOf<Pairing> (pairing);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (pairing.id, "1");
-			Assert.AreEqual (pairing.user.name, "some user");
-			Assert.AreEqual (pairing.user.id, "1");
-			Assert.IsTrue (pairing.enabled);
+			Pairing pairing = api.advanced.pairings.GetById("1");
+			Assert.IsInstanceOf<Pairing>(pairing);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(pairing.id, "1");
+			Assert.AreEqual(pairing.user.name, "some user");
+			Assert.AreEqual(pairing.user.id, "1");
+			Assert.IsTrue(pairing.enabled);
 		}
 
 		[Test]
-		public void AccessArbitraryKeysInAdvancedPairingsGetByIdTest ()
+		public void AccessArbitraryKeysInAdvancedPairingsGetByIdTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""random_key"":""84""}";
-			Pairing pairing = api.advanced.pairings.GetById  ("1");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (pairing.id, "1");
-			Assert.AreEqual (pairing.user.name, "some user");
-			Assert.AreEqual (pairing.user.id, "1");
-			Assert.IsTrue (pairing.enabled);
-			Assert.AreEqual (pairing["random_key"], "84");
+			Pairing pairing = api.advanced.pairings.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(pairing.id, "1");
+			Assert.AreEqual(pairing.user.name, "some user");
+			Assert.AreEqual(pairing.user.id, "1");
+			Assert.IsTrue(pairing.enabled);
+			Assert.AreEqual(pairing["random_key"], "84");
 		}
 
 		[Test]
-		public void AdvancedAuthenticationRequestsGetByIdTest ()
+		public void AdvancedAuthenticationRequestsGetByIdTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
-			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById ("1");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (auth.id, "1");
-			Assert.IsFalse (auth.pending);
-			Assert.IsTrue (auth.granted);
-			Assert.AreEqual (auth.reason, "its a test");
-			Assert.AreEqual (auth.terminal.id, "1");
-			Assert.AreEqual (auth.terminal.name, "test terminal");
+			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(auth.id, "1");
+			Assert.IsFalse(auth.pending);
+			Assert.IsTrue(auth.granted);
+			Assert.AreEqual(auth.reason, "its a test");
+			Assert.AreEqual(auth.terminal.id, "1");
+			Assert.AreEqual(auth.terminal.name, "test terminal");
 		}
 
 		[Test]
-		public void AccessArbitraryKeysInAdvancedAuthenticationRequestsGetByIdTest ()
+		public void AccessArbitraryKeysInAdvancedAuthenticationRequestsGetByIdTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}, ""random_key"":""84""}";
-			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById ("1");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (auth.id, "1");
-			Assert.IsFalse (auth.pending);
-			Assert.IsTrue (auth.granted);
-			Assert.AreEqual (auth.reason, "its a test");
-			Assert.AreEqual (auth.terminal.id, "1");
-			Assert.AreEqual (auth.terminal.name, "test terminal");
-			Assert.AreEqual (auth["random_key"], "84");
+			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(auth.id, "1");
+			Assert.IsFalse(auth.pending);
+			Assert.IsTrue(auth.granted);
+			Assert.AreEqual(auth.reason, "its a test");
+			Assert.AreEqual(auth.terminal.id, "1");
+			Assert.AreEqual(auth.terminal.name, "test terminal");
+			Assert.AreEqual(auth["random_key"], "84");
 		}
 
 		[Test]
-		public void AdvancedUsersGetByIdTest ()
+		public void AdvancedUsersGetByIdTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = USER_RESPONSE;
-			User user = api.advanced.users.GetById ("1");
-			Assert.IsInstanceOf<User> (user);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "userName");
-			Assert.IsTrue (user.toopherAuthenticationEnabled);
+			User user = api.advanced.users.GetById("1");
+			Assert.IsInstanceOf<User>(user);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(user.id, "1");
+			Assert.AreEqual(user.name, "userName");
+			Assert.IsTrue(user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void AccessArbitraryKeysInAdvancedUsersGetByIdTest ()
+		public void AccessArbitraryKeysInAdvancedUsersGetByIdTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true, ""random_key"":""84""}";
-			User user = api.advanced.users.GetById  ("1");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "userName");
-			Assert.IsTrue (user.toopherAuthenticationEnabled);
-			Assert.AreEqual (user["random_key"], "84");
+			User user = api.advanced.users.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(user.id, "1");
+			Assert.AreEqual(user.name, "userName");
+			Assert.IsTrue(user.toopherAuthenticationEnabled);
+			Assert.AreEqual(user["random_key"], "84");
 		}
 
 		[Test]
-		public void AdvancedUsersGetByNameTest ()
+		public void AdvancedUsersGetByNameTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValueArray = @"[{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}]";
 			WebClientMock.ReturnValue = USER_RESPONSE;
 			User user = api.advanced.users.GetByName("userName");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "userName");
-			Assert.IsTrue (user.toopherAuthenticationEnabled);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(user.id, "1");
+			Assert.AreEqual(user.name, "userName");
+			Assert.IsTrue(user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void AdvancedUsersCreateTest ()
+		public void AdvancedUsersCreateTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = USER_RESPONSE;
-			User user = api.advanced.users.Create ("userName");
-			Assert.IsInstanceOf<User> (user);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "userName");
-			Assert.IsTrue (user.toopherAuthenticationEnabled);
+			User user = api.advanced.users.Create("userName");
+			Assert.IsInstanceOf<User>(user);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(user.id, "1");
+			Assert.AreEqual(user.name, "userName");
+			Assert.IsTrue(user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void AdvancedUsersCreateWithParamsTest ()
+		public void AdvancedUsersCreateWithParamsTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = USER_RESPONSE;
 			NameValueCollection parameters = new NameValueCollection();
-			parameters.Add ("foo", "bar");
-			User user = api.advanced.users.Create ("userName", parameters);
-			Assert.IsInstanceOf<User> (user);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["foo"], "bar");
-			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "userName");
-			Assert.IsTrue (user.toopherAuthenticationEnabled);
+			parameters.Add("foo", "bar");
+			User user = api.advanced.users.Create("userName", parameters);
+			Assert.IsInstanceOf<User>(user);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["foo"], "bar");
+			Assert.AreEqual(user.id, "1");
+			Assert.AreEqual(user.name, "userName");
+			Assert.IsTrue(user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void AdvancedUserTerminalsGetByIdTest ()
+		public void AdvancedUserTerminalsGetByIdTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = USER_TERMINAL_RESPONSE;
-			UserTerminal userTerminal = api.advanced.userTerminals.GetById ("1");
-			Assert.IsInstanceOf<UserTerminal> (userTerminal);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (userTerminal.id, "1");
-			Assert.AreEqual (userTerminal.name, "userTerminalName");
-			Assert.AreEqual (userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
-			Assert.IsInstanceOf<User> (userTerminal.user);
+			UserTerminal userTerminal = api.advanced.userTerminals.GetById("1");
+			Assert.IsInstanceOf<UserTerminal>(userTerminal);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(userTerminal.id, "1");
+			Assert.AreEqual(userTerminal.name, "userTerminalName");
+			Assert.AreEqual(userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.IsInstanceOf<User>(userTerminal.user);
 		}
 
 		[Test]
-		public void AccessArbitraryKeysInAdvancedUserTerminalsGetByIdTest ()
+		public void AccessArbitraryKeysInAdvancedUserTerminalsGetByIdTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"",""random_key"":""84"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}";
-			UserTerminal userTerminal = api.advanced.userTerminals.GetById ("1");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (userTerminal.id, "1");
-			Assert.AreEqual (userTerminal.name, "userTerminalName");
-			Assert.IsTrue (userTerminal.user.toopherAuthenticationEnabled);
-			Assert.AreEqual (userTerminal["random_key"], "84");
+			UserTerminal userTerminal = api.advanced.userTerminals.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(userTerminal.id, "1");
+			Assert.AreEqual(userTerminal.name, "userTerminalName");
+			Assert.IsTrue(userTerminal.user.toopherAuthenticationEnabled);
+			Assert.AreEqual(userTerminal["random_key"], "84");
 		}
 
 		[Test]
-		public void AdvancedUserTerminalsCreateTest ()
+		public void AdvancedUserTerminalsCreateTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = USER_TERMINAL_RESPONSE;
-			UserTerminal userTerminal = api.advanced.userTerminals.Create ("userName", "userTerminalName", "requesterSpecifiedId");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (userTerminal.id, "1");
-			Assert.AreEqual (userTerminal.name, "userTerminalName");
-			Assert.AreEqual (userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
-			Assert.IsInstanceOf<User> (userTerminal.user);
+			UserTerminal userTerminal = api.advanced.userTerminals.Create("userName", "userTerminalName", "requesterSpecifiedId");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(userTerminal.id, "1");
+			Assert.AreEqual(userTerminal.name, "userTerminalName");
+			Assert.AreEqual(userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.IsInstanceOf<User>(userTerminal.user);
 		}
 
 		[Test]
-		public void AdvancedUserTerminalsCreateWithParamsTest ()
+		public void AdvancedUserTerminalsCreateWithParamsTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = USER_TERMINAL_RESPONSE;
 			NameValueCollection parameters = new NameValueCollection();
-			parameters.Add ("foo", "bar");
-			UserTerminal userTerminal = api.advanced.userTerminals.Create ("userName", "userTerminalName", "requesterSpecifiedId", parameters);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["foo"], "bar");
-			Assert.AreEqual (userTerminal.id, "1");
-			Assert.AreEqual (userTerminal.name, "userTerminalName");
-			Assert.AreEqual (userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
-			Assert.IsInstanceOf<User> (userTerminal.user);
+			parameters.Add("foo", "bar");
+			UserTerminal userTerminal = api.advanced.userTerminals.Create("userName", "userTerminalName", "requesterSpecifiedId", parameters);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["foo"], "bar");
+			Assert.AreEqual(userTerminal.id, "1");
+			Assert.AreEqual(userTerminal.name, "userTerminalName");
+			Assert.AreEqual(userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.IsInstanceOf<User>(userTerminal.user);
 		}
 
 		[Test]
 		[ExpectedException(typeof(UserDisabledError))]
-		public void DisabledUserRaisesCorrectErrorTest ()
+		public void DisabledUserRaisesCorrectErrorTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnException = makeError((HttpStatusCode)409,
 				@"{""error_code"":704, ""error_message"":""The specified user has disabled Toopher authentication.""}");
-			api.Authenticate ("some disabled user", requesterSpecifiedId: "some random string");
+			api.Authenticate("some disabled user", requesterSpecifiedId: "some random string");
 		}
 
 		[Test]
-		[ExpectedException (typeof (UserUnknownError))]
-		public void UnknownUserRaisesCorrectErrorTest ()
+		[ExpectedException(typeof(UserUnknownError))]
+		public void UnknownUserRaisesCorrectErrorTest()
 		{
-			var api = getToopherApi ();
-			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
+			var api = getToopherApi();
+			WebClientMock.ReturnException = makeError((HttpStatusCode)409,
 				@"{""error_code"":705, ""error_message"":""No matching user exists.""}");
-			api.Authenticate ("some unknown user", requesterSpecifiedId: "some random string");
+			api.Authenticate("some unknown user", requesterSpecifiedId: "some random string");
 		}
 
 		[Test]
-		[ExpectedException (typeof (TerminalUnknownError))]
-		public void UnknownTerminalRaisesCorrectErrorTest ()
+		[ExpectedException(typeof(TerminalUnknownError))]
+		public void UnknownTerminalRaisesCorrectErrorTest()
 		{
-			var api = getToopherApi ();
-			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
+			var api = getToopherApi();
+			WebClientMock.ReturnException = makeError((HttpStatusCode)409,
 				@"{""error_code"":706, ""error_message"":""No matching terminal exists.""}");
-			api.Authenticate ("some unknown user", requesterSpecifiedId: "some random string");
+			api.Authenticate("some unknown user", requesterSpecifiedId: "some random string");
 		}
 
 		[Test]
-		[ExpectedException (typeof (PairingDeactivatedError))]
-		public void DeactivatedPairingRaisesCorrectErrorTest ()
+		[ExpectedException(typeof(PairingDeactivatedError))]
+		public void DeactivatedPairingRaisesCorrectErrorTest()
 		{
-			var api = getToopherApi ();
-			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
+			var api = getToopherApi();
+			WebClientMock.ReturnException = makeError((HttpStatusCode)409,
 				@"{""error_code"":601, ""error_message"":""This pairing has been deactivated.""}");
-			api.Authenticate ("some disabled user", requesterSpecifiedId: "some random string");
+			api.Authenticate("some disabled user", requesterSpecifiedId: "some random string");
 		}
 
 		[Test]
-		[ExpectedException (typeof (PairingDeactivatedError))]
-		public void UnauthorizedPairingRaisesCorrectErrorTest ()
+		[ExpectedException(typeof(PairingDeactivatedError))]
+		public void UnauthorizedPairingRaisesCorrectErrorTest()
 		{
-			var api = getToopherApi ();
-			WebClientMock.ReturnException = makeError ((HttpStatusCode)409,
+			var api = getToopherApi();
+			WebClientMock.ReturnException = makeError((HttpStatusCode)409,
 				@"{""error_code"":601, ""error_message"":""This pairing has not been authorized to authenticate.""}");
-			api.Authenticate ("some unauthorized user", requesterSpecifiedId: "some random string");
+			api.Authenticate("some unauthorized user", requesterSpecifiedId: "some random string");
 		}
 	}
 
@@ -676,64 +682,64 @@ namespace ToopherDotNetTests
 		private IDictionary<string, object> PAIRING_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""userName"", ""toopher_authentication_enabled"":true}}");
 
 		[Test]
-		public void CreatePairingTest ()
+		public void CreatePairingTest()
 		{
-			var api = getToopherApi ();
-			Pairing pairing = new Pairing (PAIRING_DICT, api);
-			Assert.AreEqual (pairing.id, "1");
-			Assert.IsFalse (pairing.pending);
-			Assert.IsTrue (pairing.enabled);
-			Assert.AreEqual (pairing.user.id, "1");
-			Assert.AreEqual (pairing.user.name, "userName");
-			Assert.IsTrue (pairing.user.toopherAuthenticationEnabled);
+			var api = getToopherApi();
+			Pairing pairing = new Pairing(PAIRING_DICT, api);
+			Assert.AreEqual(pairing.id, "1");
+			Assert.IsFalse(pairing.pending);
+			Assert.IsTrue(pairing.enabled);
+			Assert.AreEqual(pairing.user.id, "1");
+			Assert.AreEqual(pairing.user.name, "userName");
+			Assert.IsTrue(pairing.user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void PairingRefreshFromServerTest ()
+		public void PairingRefreshFromServerTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":true, ""enabled"":false, ""user"":{""id"":""1"",""name"":""userNameChanged"", ""toopher_authentication_enabled"":true}}";
-			Pairing pairing = new Pairing (PAIRING_DICT, api);
-			pairing.RefreshFromServer ();
-			Assert.IsInstanceOf<Pairing> (pairing);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (pairing.id, "1");
-			Assert.AreEqual (pairing.user.name, "userNameChanged");
-			Assert.IsFalse (pairing.enabled);
-			Assert.IsTrue (pairing.pending);
+			Pairing pairing = new Pairing(PAIRING_DICT, api);
+			pairing.RefreshFromServer();
+			Assert.IsInstanceOf<Pairing>(pairing);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(pairing.id, "1");
+			Assert.AreEqual(pairing.user.name, "userNameChanged");
+			Assert.IsFalse(pairing.enabled);
+			Assert.IsTrue(pairing.pending);
 		}
 
 		[Test]
-		public void PairingGetResetLinkTest ()
+		public void PairingGetResetLinkTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			string link = "http://api.toopher.test/v1/pairings/1/reset?reset_authorization=abcde";
 			WebClientMock.ReturnValue = @"{""url"":""" + link + @"""}";
-			Pairing pairing = new Pairing (PAIRING_DICT, api);
-			string returnedLink = pairing.GetResetLink ();
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (returnedLink, link);
+			Pairing pairing = new Pairing(PAIRING_DICT, api);
+			string returnedLink = pairing.GetResetLink();
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(returnedLink, link);
 		}
 
 		[Test]
-		public void PairingEmailResetLinkTest ()
+		public void PairingEmailResetLinkTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{}";
-			Pairing pairing = new Pairing (PAIRING_DICT, api);
-			pairing.EmailResetLink ("test@test.com");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["reset_email"], "test@test.com");
+			Pairing pairing = new Pairing(PAIRING_DICT, api);
+			pairing.EmailResetLink("test@test.com");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["reset_email"], "test@test.com");
 		}
 
 		[Test]
-		public void PairingGetQrCodeImage ()
+		public void PairingGetQrCodeImage()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{}";
-			Pairing pairing = new Pairing (PAIRING_DICT, api);
-			pairing.GetQrCodeImage ();
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
+			Pairing pairing = new Pairing(PAIRING_DICT, api);
+			pairing.GetQrCodeImage();
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 		}
 	}
 
@@ -744,53 +750,53 @@ namespace ToopherDotNetTests
 		private IDictionary<string, object> AUTH_REQUEST_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""pending"":true, ""granted"":false, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}");
 
 		[Test]
-		public void CreateAuthenticationRequestTest ()
+		public void CreateAuthenticationRequestTest()
 		{
-			var api = getToopherApi ();
-			AuthenticationRequest auth = new AuthenticationRequest (AUTH_REQUEST_DICT, api);
-			Assert.AreEqual (auth.id, "1");
-			Assert.IsTrue (auth.pending);
-			Assert.IsFalse (auth.granted);
-			Assert.IsFalse (auth.automated);
-			Assert.AreEqual (auth.reasonCode, 1);
-			Assert.AreEqual (auth.reason, "its a test");
-			Assert.AreEqual (auth.terminal.id, "1");
-			Assert.AreEqual (auth.terminal.name, "test terminal");
-			Assert.AreEqual (auth.terminal.requesterSpecifiedId, "requesterSpecifiedId");
-			Assert.AreEqual (auth.user.id, "1");
-			Assert.AreEqual (auth.user.name, "some user");
-			Assert.IsTrue (auth.user.toopherAuthenticationEnabled);
-			Assert.AreEqual (auth.action.id, "1");
-			Assert.AreEqual (auth.action.name, "actionName");
+			var api = getToopherApi();
+			AuthenticationRequest auth = new AuthenticationRequest(AUTH_REQUEST_DICT, api);
+			Assert.AreEqual(auth.id, "1");
+			Assert.IsTrue(auth.pending);
+			Assert.IsFalse(auth.granted);
+			Assert.IsFalse(auth.automated);
+			Assert.AreEqual(auth.reasonCode, 1);
+			Assert.AreEqual(auth.reason, "its a test");
+			Assert.AreEqual(auth.terminal.id, "1");
+			Assert.AreEqual(auth.terminal.name, "test terminal");
+			Assert.AreEqual(auth.terminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.AreEqual(auth.user.id, "1");
+			Assert.AreEqual(auth.user.name, "some user");
+			Assert.IsTrue(auth.user.toopherAuthenticationEnabled);
+			Assert.AreEqual(auth.action.id, "1");
+			Assert.AreEqual(auth.action.name, "actionName");
 		}
 
 		[Test]
-		public void AuthenticationRequestRefreshFromServerTest ()
+		public void AuthenticationRequestRefreshFromServerTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":true, ""granted"":true, ""automated"":false, ""reason_code"":2, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal CHANGED"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user CHANGED"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName CHANGED""}}";
-			AuthenticationRequest auth = new AuthenticationRequest (AUTH_REQUEST_DICT, api);
-			auth.RefreshFromServer ();
-			Assert.IsInstanceOf<AuthenticationRequest> (auth);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.IsTrue (auth.pending);
-			Assert.AreEqual (auth.reasonCode, 2);
-			Assert.AreEqual (auth.terminal.name, "test terminal CHANGED");
-			Assert.AreEqual (auth.user.name, "some user CHANGED");
-			Assert.AreEqual (auth.action.name, "actionName CHANGED");
+			AuthenticationRequest auth = new AuthenticationRequest(AUTH_REQUEST_DICT, api);
+			auth.RefreshFromServer();
+			Assert.IsInstanceOf<AuthenticationRequest>(auth);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.IsTrue(auth.pending);
+			Assert.AreEqual(auth.reasonCode, 2);
+			Assert.AreEqual(auth.terminal.name, "test terminal CHANGED");
+			Assert.AreEqual(auth.user.name, "some user CHANGED");
+			Assert.AreEqual(auth.action.name, "actionName CHANGED");
 		}
 
 		[Test]
-		public void AuthenticationRequestGrantWithOtpTest ()
+		public void AuthenticationRequestGrantWithOtpTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
-			AuthenticationRequest auth = new AuthenticationRequest (AUTH_REQUEST_DICT, api);
-			auth.GrantWithOtp ("123456");
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["otp"], "123456");
-			Assert.AreEqual (auth.id, "1");
-			Assert.IsTrue (auth.granted);
+			AuthenticationRequest auth = new AuthenticationRequest(AUTH_REQUEST_DICT, api);
+			auth.GrantWithOtp("123456");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["otp"], "123456");
+			Assert.AreEqual(auth.id, "1");
+			Assert.IsTrue(auth.granted);
 		}
 	}
 
@@ -801,64 +807,64 @@ namespace ToopherDotNetTests
 		private IDictionary<string, object> USER_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}");
 
 		[Test]
-		public void CreateUserTest ()
+		public void CreateUserTest()
 		{
-			var api = getToopherApi ();
-			Toopher.User user = new Toopher.User (USER_DICT, api);
-			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "userName");
-			Assert.IsTrue (user.toopherAuthenticationEnabled);
+			var api = getToopherApi();
+			Toopher.User user = new Toopher.User(USER_DICT, api);
+			Assert.AreEqual(user.id, "1");
+			Assert.AreEqual(user.name, "userName");
+			Assert.IsTrue(user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void UserRefreshFromServerTest ()
+		public void UserRefreshFromServerTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userNameChanged"", ""toopher_authentication_enabled"":false}";
-			User user = new User (USER_DICT, api);
-			user.RefreshFromServer ();
-			Assert.IsInstanceOf<User> (user);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (user.id, "1");
-			Assert.AreEqual (user.name, "userNameChanged");
-			Assert.IsFalse (user.toopherAuthenticationEnabled);
+			User user = new User(USER_DICT, api);
+			user.RefreshFromServer();
+			Assert.IsInstanceOf<User>(user);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(user.id, "1");
+			Assert.AreEqual(user.name, "userNameChanged");
+			Assert.IsFalse(user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void UserEnableToopherAuthentication ()
+		public void UserEnableToopherAuthentication()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = USER_RESPONSE;
-			User user = new User (USER_DICT, api);
-			user.EnableToopherAuthentication ();
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["toopher_authentication_enabled"], "true");
-			Assert.AreEqual (user.id, "1");
-			Assert.IsTrue (user.toopherAuthenticationEnabled);
+			User user = new User(USER_DICT, api);
+			user.EnableToopherAuthentication();
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["toopher_authentication_enabled"], "true");
+			Assert.AreEqual(user.id, "1");
+			Assert.IsTrue(user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void UserDisableToopherAuthentication ()
+		public void UserDisableToopherAuthentication()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":false}";
-			User user = new User (USER_DICT, api);
-			user.DisableToopherAuthentication ();
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["toopher_authentication_enabled"], "false");
-			Assert.AreEqual (user.id, "1");
-			Assert.IsFalse (user.toopherAuthenticationEnabled);
+			User user = new User(USER_DICT, api);
+			user.DisableToopherAuthentication();
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["toopher_authentication_enabled"], "false");
+			Assert.AreEqual(user.id, "1");
+			Assert.IsFalse(user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void UserResetTest ()
+		public void UserResetTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = USER_RESPONSE;
-			User user = new User (USER_DICT, api);
-			user.Reset ();
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "POST");
-			Assert.AreEqual (WebClientMock.LastRequestData["name"], "userName");
+			User user = new User(USER_DICT, api);
+			user.Reset();
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["name"], "userName");
 		}
 	}
 
@@ -869,31 +875,31 @@ namespace ToopherDotNetTests
 		private IDictionary<string, object> USER_TERMINAL_DICT = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}");
 
 		[Test]
-		public void CreateUserTerminalTest ()
+		public void CreateUserTerminalTest()
 		{
-			var api = getToopherApi ();
-			UserTerminal userTerminal = new UserTerminal (USER_TERMINAL_DICT, api);
-			Assert.AreEqual (userTerminal.id, "1");
-			Assert.AreEqual (userTerminal.name, "userTerminalName");
-			Assert.AreEqual (userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
-			Assert.AreEqual (userTerminal.user.id, "1");
-			Assert.AreEqual (userTerminal.user.name, "userName");
-			Assert.IsTrue (userTerminal.user.toopherAuthenticationEnabled);
+			var api = getToopherApi();
+			UserTerminal userTerminal = new UserTerminal(USER_TERMINAL_DICT, api);
+			Assert.AreEqual(userTerminal.id, "1");
+			Assert.AreEqual(userTerminal.name, "userTerminalName");
+			Assert.AreEqual(userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
+			Assert.AreEqual(userTerminal.user.id, "1");
+			Assert.AreEqual(userTerminal.user.name, "userName");
+			Assert.IsTrue(userTerminal.user.toopherAuthenticationEnabled);
 		}
 
 		[Test]
-		public void UserTerminalRefreshFromServerTest ()
+		public void UserTerminalRefreshFromServerTest()
 		{
-			var api = getToopherApi ();
+			var api = getToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalNameChanged"", ""requester_specified_id"":""requesterSpecifiedId"", ""user"":{""id"":""1"", ""name"":""userNameChanged"", ""toopher_authentication_enabled"":false}}";
-			UserTerminal userTerminal = new UserTerminal (USER_TERMINAL_DICT, api);
-			userTerminal.RefreshFromServer ();
-			Assert.IsInstanceOf<UserTerminal> (userTerminal);
-			Assert.AreEqual (WebClientMock.LastRequestMethod, "GET");
-			Assert.AreEqual (userTerminal.id, "1");
-			Assert.AreEqual (userTerminal.name, "userTerminalNameChanged");
-			Assert.AreEqual (userTerminal.user.name, "userNameChanged");
-			Assert.IsFalse (userTerminal.user.toopherAuthenticationEnabled);
+			UserTerminal userTerminal = new UserTerminal(USER_TERMINAL_DICT, api);
+			userTerminal.RefreshFromServer();
+			Assert.IsInstanceOf<UserTerminal>(userTerminal);
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(userTerminal.id, "1");
+			Assert.AreEqual(userTerminal.name, "userTerminalNameChanged");
+			Assert.AreEqual(userTerminal.user.name, "userNameChanged");
+			Assert.IsFalse(userTerminal.user.toopherAuthenticationEnabled);
 		}
 	}
 
@@ -901,12 +907,12 @@ namespace ToopherDotNetTests
 	public class ActionTests : TestBase
 	{
 		[Test]
-		public void CreateActionTest ()
+		public void CreateActionTest()
 		{
 			var response = (IDictionary<string, object>)SimpleJson.SimpleJson.DeserializeObject(@"{""id"":""1"", ""name"":""actionName""}");
-			Toopher.Action action = new Toopher.Action (response);
-			Assert.AreEqual (action.id, "1");
-			Assert.AreEqual (action.name, "actionName");
+			Toopher.Action action = new Toopher.Action(response);
+			Assert.AreEqual(action.id, "1");
+			Assert.AreEqual(action.name, "actionName");
 		}
 	}
 }
