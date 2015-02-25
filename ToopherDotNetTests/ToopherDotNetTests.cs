@@ -346,9 +346,11 @@ namespace ToopherDotNetTests
 		{
 			var api = getToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
-			Pairing pairing = api.Pair("awkward turtle", "some user", extras: new Dictionary<string,string>(){{"test_param", "42"}});
+			Pairing pairing = api.Pair("some user", "awkward turtle", extras: new Dictionary<string,string>(){{"test_param", "42"}});
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["test_param"], "42");
+			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some user");
+			Assert.AreEqual(WebClientMock.LastRequestData["pairing_phrase"], "awkward turtle");
 			Assert.AreEqual(pairing.id, "1");
 		}
 
