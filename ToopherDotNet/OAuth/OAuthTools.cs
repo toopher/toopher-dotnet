@@ -27,9 +27,9 @@ namespace OAuth
           OAuthTools.nonceOverride = nonceOverride;
         }
 
-        private static DateTime? dateOverride;
+        private static DateTime dateOverride;
 
-        public static void SetDateOverride (DateTime? dateOverride)
+        public static void SetDateOverride (DateTime dateOverride)
         {
           OAuthTools.dateOverride = dateOverride;
         }
@@ -87,7 +87,11 @@ namespace OAuth
         /// <returns></returns>
         public static string GetTimestamp()
         {
-          return GetTimestamp(dateOverride ?? DateTime.UtcNow);
+          if (dateOverride == default(DateTime)) {
+            return GetTimestamp(DateTime.UtcNow);
+          } else {
+            return GetTimestamp(dateOverride);
+          }
         }
 
         /// <summary>

@@ -27,16 +27,16 @@ namespace Toopher
 		private string baseUrl;
 		private string consumerKey;
 		private string consumerSecret;
-		private static DateTime? dateOverride;
+		private static DateTime dateOverride;
 
-		public static void SetDateOverride(DateTime? dateOverride)
+		public static void SetDateOverride(DateTime dateOverride)
 		{
 			ToopherIframe.dateOverride = dateOverride;
 		}
 
 		private static DateTime GetDate()
 		{
-			return dateOverride ?? DateTime.UtcNow;
+			return dateOverride == default(DateTime) ? DateTime.UtcNow : dateOverride;
 		}
 
 		/// <summary>

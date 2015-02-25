@@ -98,9 +98,6 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = null;
 			WebClientMock.LastRequestMethod = null;
 			WebClientMock.LastRequestData = null;
-			ToopherIframe.SetDateOverride(null);
-			OAuthTools.SetNonceOverride(null);
-			OAuthTools.SetDateOverride(null);
 		}
 
 		public ToopherApi getToopherApi()
@@ -115,14 +112,6 @@ namespace ToopherDotNetTests
 		private const string REQUEST_TOKEN = "s9s7vsb";
 		private const string OAUTH_NONCE = "12345678";
 		private DateTime TEST_DATE = new DateTime(1970, 1, 1, 0, 16, 40, 0);
-
-		[SetUp]
-		public override void Init()
-		{
-			ToopherIframe.SetDateOverride(null);
-			OAuthTools.SetNonceOverride(null);
-			OAuthTools.SetDateOverride(null);
-		}
 
 		private ToopherIframe getToopherIframeApi()
 		{
