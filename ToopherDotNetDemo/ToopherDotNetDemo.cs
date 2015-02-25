@@ -86,7 +86,7 @@ namespace Toopher
 						Environment.Exit(0);
 					}
 				} catch (RequestError err) {
-					Console.WriteLine (String.Format ("Could not check pairing status (reason:{0})", err.Message));
+					Console.WriteLine (String.Format ("Could not check pairing status (Reason:{0})", err.Message));
 				}
 			}
 
@@ -103,9 +103,9 @@ namespace Toopher
 
 				AuthenticationRequest authRequest;
 				try {
-					authRequest = api.Authenticate (pairingId, terminalName);
+					authRequest = api.Authenticate (pairing.user.name, terminalName);
 				} catch (RequestError err) {
-					Console.WriteLine (String.Format ("Error initiating authentication (reason:{0})", err.Message));
+					Console.WriteLine (String.Format ("Error initiating authentication (Reason:{0})", err.Message));
 					continue;
 				}
 
@@ -117,7 +117,7 @@ namespace Toopher
 					try {
 						authRequest.RefreshFromServer();
 					} catch (RequestError err) {
-						Console.WriteLine (String.Format ("Could not check authentication status (reason:{0})", err.Message));
+						Console.WriteLine (String.Format ("Could not check authentication status (Reason:{0})", err.Message));
 						continue;
 					}
 
