@@ -57,4 +57,9 @@ if (auth.pending == false && auth.granted == true) {
 If any request runs into an error a `RequestError` will be thrown with more details on what went wrong.
 
 #### Try it out
-Check out the `ToopherDotNetDemo` project for an example program that walks you through the whole process!
+Check out the ToopherDotNetDemo for an example program that walks you through the whole process!  Simply execute the script as follows:
+```shell
+$ xbuild
+$ mono ToopherDotNetDemo/bin/Debug/ToopherDotNetDemo.exe
+```
+To avoid being prompted for your Toopher API key and secret, you can define them in the $TOOPHER_CONSUMER_KEY and $TOOPHER_CONSUMER_SECRET environment variables
