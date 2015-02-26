@@ -282,6 +282,27 @@ namespace ToopherDotNetTests
 			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
 			Assert.That(ex.Message, Is.StringContaining("Missing required keys: session_token"));
 		}
+
+		[Test]
+		public void ValidatePostbackWithoutStringArrayIsSuccessfulTest()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			Dictionary<string, string> data = new Dictionary<string, string>()
+			{
+				{"foo", "bar"},
+				{"timestamp", ((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()},
+				{"session_token", REQUEST_TOKEN},
+				{"toopher_sig", "6d2c7GlQssGmeYYGpcf+V/kirOI="}
+			};
+			try
+			{
+				Assert.IsNotNull(api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			} catch (Exception)
+			{
+				Assert.Fail("ValidatePostback overload for Dictionary<string, string> was not successful");
+			}
+		}
 	}
 
 	[TestFixture()]
