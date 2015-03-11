@@ -81,13 +81,11 @@ namespace Toopher
 				ttl = DEFAULT_TTL;
 			}
 
-			parameters.Add("v", IFRAME_VERSION);
 			parameters.Add("username", userName);
 			parameters.Add("reset_email", resetEmail);
 			parameters.Add("session_token", requestToken);
 			parameters.Add("action_name", actionName);
 			parameters.Add("requester_metadata", requesterMetadata);
-			parameters.Add("expires", (GetUnixEpochTimeInSeconds() + ttl).ToString());
 
 			if (extras != null)
 			{
@@ -96,7 +94,7 @@ namespace Toopher
 					parameters.Add(kvp.Key, kvp.Value);
 				}
 			}
-			return GetOauthUrl(baseUrl + "web/authenticate", parameters);
+			return GetOauthUrl(baseUrl + "web/authenticate", parameters, ttl);
 		}
 
 		/// <summary>
@@ -119,10 +117,8 @@ namespace Toopher
 				ttl = DEFAULT_TTL;
 			}
 
-			parameters.Add("v", IFRAME_VERSION);
 			parameters.Add("username", userName);
 			parameters.Add("reset_email", resetEmail);
-			parameters.Add("expires", (GetUnixEpochTimeInSeconds() + ttl).ToString());
 
 			if (extras != null)
 			{
@@ -131,7 +127,7 @@ namespace Toopher
 					parameters.Add(kvp.Key, kvp.Value);
 				}
 			}
-			return GetOauthUrl(baseUrl + "web/manage_user", parameters);
+			return GetOauthUrl(baseUrl + "web/manage_user", parameters, ttl);
 		}
 
 		public Dictionary<string, string> ValidatePostback(Dictionary<string, string[]> parameters, string requestToken, long ttl = DEFAULT_TTL)
@@ -213,8 +209,11 @@ namespace Toopher
 			}
 		}
 
-		private string GetOauthUrl(string url, NameValueCollection parameters)
+		private string GetOauthUrl(string url, NameValueCollection parameters, long ttl)
 		{
+			parameters.Add("v", IFRAME_VERSION);
+			parameters.Add("expires", (GetUnixEpochTimeInSeconds() + ttl).ToString());
+
 			OAuthRequest client = OAuthRequest.ForRequestToken(consumerKey, consumerSecret);
 			client.RequestUrl = url;
 
