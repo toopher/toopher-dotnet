@@ -68,7 +68,7 @@ namespace Toopher
 		/// <param name="requesterMetadata">Optional, can be empty. Toopher will include this value in the signed data returned with the iFrame response.</param>
 		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
 		/// <returns>A string URL that can be used to retrieve the Authentication iFrame by the user's browser.</returns>
-		public string GetAuthenticationUrl(string userName, string resetEmail, string requestToken, string actionName = "Log In", string requesterMetadata = "None", Dictionary<string, string> extras = null)
+		public string GetAuthenticationUrl(string userName, string resetEmail="", string requestToken="", string actionName = "Log In", string requesterMetadata = "", Dictionary<string, string> extras = null)
 		{
 			NameValueCollection parameters = new NameValueCollection();
 			long ttl;
@@ -106,7 +106,7 @@ namespace Toopher
 		/// <param name="resetEmail">Email address that the user has access to. In case the user has lost or cannot access their mobile device, Toopher will send a reset email to this address.</param>
 		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
 		/// <returns>A string URL that can be used to retrieve the Pairing iFrame by the user's browser.</reeturns>
-		public string GetUserManagementUrl(string userName, string resetEmail, Dictionary<string, string> extras = null)
+		public string GetUserManagementUrl(string userName, string resetEmail="", Dictionary<string, string> extras = null)
 		{
 			NameValueCollection parameters = new NameValueCollection();
 			long ttl;

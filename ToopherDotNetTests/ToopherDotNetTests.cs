@@ -132,33 +132,60 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void GetAuthenticationUrlTest()
+		public void GetAuthenticationUrlOnlyUsernameTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
 			OAuthTools.SetNonceOverride(OAUTH_NONCE);
 			OAuthTools.SetDateOverride(TEST_DATE);
-			string expected = "https://api.toopher.test/v1/web/authenticate?action_name=Log+In&expires=1300&requester_metadata=None&reset_email=jdoe%40example.com&session_token=s9s7vsb&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=YN%2BkKNTaoypsB37fsjvMS8vsG5A%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
-			var authUrl = api.GetAuthenticationUrl("jdoe", "jdoe@example.com", REQUEST_TOKEN);
+			string expected = "https://api.toopher.test/v1/web/authenticate?action_name=Log+In&expires=1300&requester_metadata=&reset_email=&session_token=&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=NkaWUjEPRLwgsQMEJGsIQEpyRT4%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
+			var authUrl = api.GetAuthenticationUrl("jdoe");
 			Assert.AreEqual(expected, authUrl);
 		}
 
 		[Test]
-		public void GetAuthenticationUrlWithExtrasTest()
+		public void GetAuthenticationUrlWithOptionalArgsTest()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			OAuthTools.SetNonceOverride(OAUTH_NONCE);
+			OAuthTools.SetDateOverride(TEST_DATE);
+			string expected = "https://api.toopher.test/v1/web/authenticate?action_name=it+is+a+test&expires=1300&requester_metadata=metadata&reset_email=jdoe%40example.com&session_token=s9s7vsb&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=2TydgMnUwWoiwfpljKpSaFg0Luo%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
+			var authUrl = api.GetAuthenticationUrl("jdoe", "jdoe@example.com", REQUEST_TOKEN, "it is a test", "metadata");
+			Assert.AreEqual(expected, authUrl);
+		}
+
+		[Test]
+		public void GetAuthenticationUrlWithOptionalArgsAndExtrasTest()
 		{
 			Dictionary<string, string> extras = new Dictionary<string, string>();
 			extras.Add("allow_inline_pairing", "false");
+			extras.Add("automation_allowed", "false");
+			extras.Add("challenge_required", "true");
+			extras.Add("ttl", "100");
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
 			OAuthTools.SetNonceOverride(OAUTH_NONCE);
 			OAuthTools.SetDateOverride(TEST_DATE);
-			string expected = "https://api.toopher.test/v1/web/authenticate?action_name=it+is+a+test&allow_inline_pairing=false&expires=1300&requester_metadata=None&reset_email=jdoe%40example.com&session_token=s9s7vsb&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=W%2F2dcdsVc7YgdSCZuEo8ViHLlOo%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
-			var authUrl = api.GetAuthenticationUrl("jdoe", "jdoe@example.com", REQUEST_TOKEN, "it is a test", "None", extras);
+			string expected = "https://api.toopher.test/v1/web/authenticate?action_name=it+is+a+test&allow_inline_pairing=false&automation_allowed=false&challenge_required=true&expires=1100&requester_metadata=metadata&reset_email=jdoe%40example.com&session_token=s9s7vsb&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=61dqeQNPFxNy8PyEFB9e5UfgN8s%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
+			var authUrl = api.GetAuthenticationUrl("jdoe", "jdoe@example.com", REQUEST_TOKEN, "it is a test", "metadata", extras);
 			Assert.AreEqual(expected, authUrl);
 		}
 
 		[Test]
-		public void GetUserManagementUrlTest()
+		public void GetUserManagementUrlOnlyUsernameTest()
+		{
+			var api = getToopherIframeApi();
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			OAuthTools.SetNonceOverride(OAUTH_NONCE);
+			OAuthTools.SetDateOverride(TEST_DATE);
+			string expected = "https://api.toopher.test/v1/web/manage_user?expires=1300&reset_email=&username=jdoe&v=2&oauth_consumer_key=abcdefg&oauth_nonce=12345678&oauth_signature=SA7CAUj%2B5QcGO%2BMmdPv9ubbaozk%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1000&oauth_version=1.0&";
+			var userManagementUrl = api.GetUserManagementUrl("jdoe");
+			Assert.AreEqual(expected, userManagementUrl);
+		}
+
+		[Test]
+		public void GetUserManagementUrlWithEmailTest()
 		{
 			var api = getToopherIframeApi();
 			ToopherIframe.SetDateOverride(TEST_DATE);
@@ -170,7 +197,7 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void GetUserManagementUrlWithExtrasTest()
+		public void GetUserManagementUrlWithEmailAndExtrasTest()
 		{
 			Dictionary<string, string> extras = new Dictionary<string, string>();
 			extras.Add("ttl", "100");
