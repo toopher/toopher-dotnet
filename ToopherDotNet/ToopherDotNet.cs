@@ -74,7 +74,7 @@ namespace Toopher
 			long ttl;
 			if (extras != null && extras.ContainsKey("ttl"))
 			{
-				ttl = Convert.ToInt64(extras["ttl"]);
+				ttl = Int32.Parse(extras["ttl"]);
 				extras.Remove("ttl");
 			} else
 			{
@@ -110,7 +110,7 @@ namespace Toopher
 			long ttl;
 			if (extras != null && extras.ContainsKey("ttl"))
 			{
-				ttl = Convert.ToInt64(extras["ttl"]);
+				ttl = Int32.Parse(extras["ttl"]);
 				extras.Remove("ttl");
 			} else
 			{
