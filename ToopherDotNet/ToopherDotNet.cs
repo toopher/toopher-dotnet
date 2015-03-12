@@ -130,27 +130,49 @@ namespace Toopher
 			return GetOauthUrl(baseUrl + "web/manage_user", parameters, ttl);
 		}
 
-		public Dictionary<string, string> ValidatePostback(Dictionary<string, string[]> parameters, string requestToken, Dictionary<string, string> extras = null)
+		/// <summary>
+		/// Verify the authenticity of data returned from the Toopher iFrame
+		/// </summary>
+		/// <param name="parameters">The data returned from the iFrame.</param>
+		/// <param name="requestToken">The request token</param>
+		/// <param name="extras">An optional Dictionary of extra parameters.</param>
+		/// <returns>An <see cref="AuthenticationRequest"/>, <see cref="Pairing"/> or <see cref="User"/> object.</returns>
+		public Object ProcessPostback(Dictionary<string, string> parameters, string requestToken = "", Dictionary<string, string> extras = null)
 		{
-			Dictionary<string, string> data = new Dictionary<string, string>();
-			foreach (var entry in parameters)
+			Dictionary<string, string> toopherData = UrlDecodeParameters(parameters);
+			if (toopherData.ContainsKey("error_code"))
 			{
-				if (entry.Value.Length > 0)
+				var errorCode = Int32.Parse(toopherData["error_code"]);
+				var errorMessage = toopherData["error_message"];
+				if (errorCode == UserDisabledError.ERROR_CODE)
 				{
-					data.Add(entry.Key, entry.Value[0]);
+					throw new UserDisabledError();
+				} else
+				{
+					throw new RequestError(errorMessage);
+				}
+			} else
+			{
+				ValidatePostback(toopherData, requestToken, extras);
+				ToopherApi api = new ToopherApi(consumerKey, consumerSecret);
+				var resourceType = toopherData["resource_type"];
+				if (resourceType == "authentication_request")
+				{
+					return new AuthenticationRequest(CreateAuthenticationRequestDict(toopherData), api);
+				} else if (resourceType == "pairing")
+				{
+					return new Pairing(CreatePairingDict(toopherData), api);
+				} else if (resourceType == "requester_user")
+				{
+					return new User(CreateUserDict(toopherData), api);
+				} else
+				{
+					throw new RequestError ("The postback resource type is not valid: " + resourceType);
 				}
 			}
-			return ValidatePostback(data, requestToken, extras);
 		}
 
-		/// <summary>
-		/// Verify the authenticity of data returned from the Toopher iFrame by validating the crytographic signature.
-		/// </summary>
-		/// <param name="params">The data returned from the iFrame.</param>
-		/// <param name="requestToken">The request token</param>
-		/// <param name="ttl">Time-To-Live (seconds) to enforce on the Toopher API signature. This value sets the maximum duration between the Toopher API creating the signature and the signature being validated on your server.</param>
-		/// <returns>A Dictionary of the validated data if the signature is valid, or null if the signature is invalid.</returns>
-		public Dictionary<string, string> ValidatePostback(Dictionary<string, string> parameters, string requestToken, Dictionary<string, string> extras = null)
+		private void ValidatePostback(Dictionary<string, string> parameters, string requestToken, Dictionary<string, string> extras)
 		{
 			try
 			{
@@ -158,14 +180,13 @@ namespace Toopher
 				VerifySessionToken(parameters["session_token"], requestToken);
 				CheckIfSignatureIsExpired(parameters["timestamp"], extras);
 				ValidateSignature(parameters);
-				return parameters;
 			} catch (Exception e)
 			{
 				throw new SignatureValidationError("Exception while validating toopher signature: " + e);
 			}
 		}
 
-		private static void CheckForMissingKeys(Dictionary<string, string> parameters)
+		private void CheckForMissingKeys(Dictionary<string, string> parameters)
 		{
 			List<string> missingKeys = new List<string>();
 
@@ -184,17 +205,17 @@ namespace Toopher
 			}
 		}
 
-		private static void VerifySessionToken(string sessionToken, string requestToken)
+		private void VerifySessionToken(string sessionToken, string requestToken)
 		{
-			if (sessionToken != requestToken)
+			if (!String.IsNullOrEmpty(requestToken) && sessionToken != requestToken)
 			{
 				throw new SignatureValidationError("Session token does not match expected value");
 			}
 		}
 
-		private static void CheckIfSignatureIsExpired(string timestamp, Dictionary<string, string> extras)
+		private void CheckIfSignatureIsExpired(string timestamp, Dictionary<string, string> extras)
 		{
-			var ttl = (extras.ContainsKey("ttl")) ? Int32.Parse(extras["ttl"]) : DEFAULT_TTL;
+			var ttl = (extras != null && extras.ContainsKey("ttl")) ? Int32.Parse(extras["ttl"]) : DEFAULT_TTL;
 			var ttlValid = (int)(GetUnixEpochTimeInSeconds() - ttl) < Int32.Parse(timestamp);
 			if (!ttlValid)
 			{
@@ -222,6 +243,60 @@ namespace Toopher
 			}
 		}
 
+		private IDictionary<string, object> CreateAuthenticationRequestDict(Dictionary<string, string> parameters)
+		{
+			return new Dictionary<string, object>{
+				{"id", parameters["id"]},
+				{"pending", parameters["pending"] == "true"},
+				{"granted", parameters["granted"] == "true"},
+				{"automated", parameters["automated"] == "true"},
+				{"reason_code", parameters["reason_code"]},
+				{"reason", parameters["reason"]},
+				{"terminal", new Dictionary<string, object>{
+					{"id", parameters["terminal_id"]},
+					{"name", parameters["terminal_name"]},
+					{"requester_specified_id", parameters["terminal_requester_specified_id"]},
+					{"user", new Dictionary<string, object>{
+						{"id", parameters["pairing_user_id"]},
+						{"name", parameters["user_name"]},
+						{"toopher_authentication_enabled", parameters["user_toopher_authentication_enabled"] == "true"}
+					}}
+				}},
+				{"user", new Dictionary<string, object>{
+					{"id", parameters["pairing_user_id"]},
+					{"name", parameters["user_name"]},
+					{"toopher_authentication_enabled", parameters["user_toopher_authentication_enabled"] == "true"}
+				}},
+				{"action", new Dictionary<string, object>{
+					{"id", parameters["action_id"]},
+					{"name", parameters["action_name"]}
+				}}
+			};
+		}
+
+		private IDictionary<string, object> CreatePairingDict(Dictionary<string, string> parameters)
+		{
+			return new Dictionary<string, object>{
+				{"id", parameters["id"]},
+				{"enabled", parameters["enabled"] == "true"},
+				{"pending", parameters["pending"] == "true"},
+				{"user", new Dictionary<string, object>{
+					{"id", parameters["pairing_user_id"]},
+					{"name", parameters["user_name"]},
+					{"toopher_authentication_enabled", parameters["user_toopher_authentication_enabled"] == "true"}
+				}}
+			};
+		}
+
+		private IDictionary<string, object> CreateUserDict(Dictionary<string, string> parameters)
+		{
+			return new Dictionary<string, object>{
+				{"id", parameters["id"]},
+				{"name", parameters["name"]},
+				{"toopher_authentication_enabled", parameters["toopher_authentication_enabled"] == "true"}
+			};
+		}
+
 		private string GetOauthUrl(string url, NameValueCollection parameters, long ttl)
 		{
 			parameters.Add("v", IFRAME_VERSION);
@@ -243,7 +318,7 @@ namespace Toopher
 
 		private static string Signature(string secret, Dictionary<string, string> data)
 		{
-			Dictionary<string, string> sortedData = data.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+			Dictionary<string, string> sortedData = data.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => OAuthTools.UrlEncodeStrict(x.Value).Replace("%20", "+"));
 			string joinedString = string.Join("&", (sortedData.Select(d => d.Key + "=" + d.Value).ToArray()));
 
 			byte[] keyBytes = Encoding.UTF8.GetBytes(secret);
@@ -265,6 +340,23 @@ namespace Toopher
 			}
 			collection.Sort((x, y) => x.Name.Equals(y.Name) ? x.Value.CompareTo(y.Value) : x.Name.CompareTo(y.Name));
 			return OAuthTools.Concatenate(collection, "=", "&");
+		}
+
+		private static Dictionary<string, string> UrlDecodeParameters(Dictionary<string, string> parameters)
+		{
+			Dictionary<string, string> toopher_data = new Dictionary<string, string>();
+			string[] splitParameters = parameters["toopher_iframe_data"].Split('&');
+			foreach (var parameter in splitParameters)
+			{
+				string[] data = parameter.Split('=');
+				string value = Uri.UnescapeDataString(data[1]);
+				if (data[0] != "toopher_sig")
+				{
+					value = value.Replace("+", " ");
+				}
+				toopher_data.Add(data[0], value);
+			}
+			return toopher_data;
 		}
 	}
 
