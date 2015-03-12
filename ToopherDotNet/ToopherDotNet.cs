@@ -769,7 +769,7 @@ namespace Toopher
 				this.id = (string)response["id"];
 				this.pending = (bool)response["pending"];
 				this.enabled = (bool)response["enabled"];
-				this.user = new User((JsonObject)response["user"], toopherApi);
+				this.user = new User((IDictionary<string, object>)response["user"], toopherApi);
 			} catch (Exception ex)
 			{
 				throw new RequestError("Could not parse pairing from response", ex);
@@ -918,9 +918,9 @@ namespace Toopher
 				this.automated = (bool)response["automated"];
 				this.reasonCode = Convert.ToInt32(response["reason_code"]);
 				this.reason = (string)response["reason"];
-				this.action = new Action((JsonObject)response["action"]);
-				this.terminal = new UserTerminal((JsonObject)response["terminal"], toopherApi);
-				this.user = new User((JsonObject)response["user"], toopherApi);
+				this.action = new Action((IDictionary<string, object>)response["action"]);
+				this.terminal = new UserTerminal((IDictionary<string, object>)response["terminal"], toopherApi);
+				this.user = new User((IDictionary<string, object>)response["user"], toopherApi);
 			} catch (Exception ex)
 			{
 				throw new RequestError("Could not parse authentication request from response", ex);
@@ -1132,7 +1132,7 @@ namespace Toopher
 				this.id = (string)response["id"];
 				this.name = (string)response["name"];
 				this.requesterSpecifiedId = (string)response["requester_specified_id"];
-				this.user = new User((JsonObject)response["user"], toopherApi);
+				this.user = new User((IDictionary<string, object>)response["user"], toopherApi);
 			} catch (Exception ex)
 			{
 				throw new RequestError("Could not parse user terminal from response", ex);
