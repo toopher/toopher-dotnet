@@ -130,7 +130,7 @@ namespace Toopher
 			return GetOauthUrl(baseUrl + "web/manage_user", parameters, ttl);
 		}
 
-		public Dictionary<string, string> ValidatePostback(Dictionary<string, string[]> parameters, string requestToken, long ttl = DEFAULT_TTL)
+		public Dictionary<string, string> ValidatePostback(Dictionary<string, string[]> parameters, string requestToken, Dictionary<string, string> extras = null)
 		{
 			Dictionary<string, string> data = new Dictionary<string, string>();
 			foreach (var entry in parameters)
@@ -140,7 +140,7 @@ namespace Toopher
 					data.Add(entry.Key, entry.Value[0]);
 				}
 			}
-			return ValidatePostback(data, requestToken, ttl);
+			return ValidatePostback(data, requestToken, extras);
 		}
 
 		/// <summary>
@@ -150,62 +150,75 @@ namespace Toopher
 		/// <param name="requestToken">The request token</param>
 		/// <param name="ttl">Time-To-Live (seconds) to enforce on the Toopher API signature. This value sets the maximum duration between the Toopher API creating the signature and the signature being validated on your server.</param>
 		/// <returns>A Dictionary of the validated data if the signature is valid, or null if the signature is invalid.</returns>
-		public Dictionary<string, string> ValidatePostback(Dictionary<string, string> parameters, string requestToken, long ttl = DEFAULT_TTL)
+		public Dictionary<string, string> ValidatePostback(Dictionary<string, string> parameters, string requestToken, Dictionary<string, string> extras = null)
 		{
 			try
 			{
-				List<string> missingKeys = new List<string>();
-
-				if (!parameters.ContainsKey("toopher_sig"))
-				{
-					missingKeys.Add("toopher_sig");
-				}
-				if (!parameters.ContainsKey("timestamp"))
-				{
-					missingKeys.Add("timestamp");
-				}
-				if (!parameters.ContainsKey("session_token"))
-				{
-					missingKeys.Add("session_token");
-				}
-				if (missingKeys.Count() > 0)
-				{
-					var keys = string.Join(", ", missingKeys.ToArray());
-					throw new SignatureValidationError("Missing required keys: " + keys);
-				}
-
-				if (parameters["session_token"] != requestToken)
-				{
-					throw new SignatureValidationError("Session token does not match expected value");
-				}
-
-				string maybeSignature = parameters["toopher_sig"];
-				parameters.Remove("toopher_sig");
-				var signatureValid = false;
-				try
-				{
-					var computedSig = Signature(consumerSecret, parameters);
-					signatureValid = computedSig == maybeSignature;
-				} catch (Exception e)
-				{
-					throw new SignatureValidationError("Error while calculating signature: " + e);
-				}
-
-				if (!signatureValid)
-				{
-					throw new SignatureValidationError("Computed signature does not match");
-				}
-
-				var ttlValid = (int)(GetUnixEpochTimeInSeconds() - ttl) < Int32.Parse(parameters["timestamp"]);
-				if (!ttlValid)
-				{
-					throw new SignatureValidationError("TTL Expired");
-				}
-
+				CheckForMissingKeys(parameters);
+				VerifySessionToken(parameters["session_token"], requestToken);
+				CheckIfSignatureIsExpired(parameters["timestamp"], extras);
+				ValidateSignature(parameters);
 				return parameters;
 			} catch (Exception e)
 			{
 				throw new SignatureValidationError("Exception while validating toopher signature: " + e);
+			}
+		}
+
+		private static void CheckForMissingKeys(Dictionary<string, string> parameters)
+		{
+			List<string> missingKeys = new List<string>();
+
+			string[] requiredKeys = {"toopher_sig", "timestamp", "session_token"};
+			foreach (string key in requiredKeys)
+			{
+				if (!parameters.ContainsKey(key))
+				{
+					missingKeys.Add(key);
+				}
+			}
+			if (missingKeys.Count() > 0)
+			{
+				var keys = string.Join(", ", missingKeys.ToArray());
+				throw new SignatureValidationError("Missing required keys: " + keys);
+			}
+		}
+
+		private static void VerifySessionToken(string sessionToken, string requestToken)
+		{
+			if (sessionToken != requestToken)
+			{
+				throw new SignatureValidationError("Session token does not match expected value");
+			}
+		}
+
+		private static void CheckIfSignatureIsExpired(string timestamp, Dictionary<string, string> extras)
+		{
+			var ttl = (extras.ContainsKey("ttl")) ? Int32.Parse(extras["ttl"]) : DEFAULT_TTL;
+			var ttlValid = (int)(GetUnixEpochTimeInSeconds() - ttl) < Int32.Parse(timestamp);
+			if (!ttlValid)
+			{
+				throw new SignatureValidationError("TTL Expired");
+			}
+		}
+
+		private void ValidateSignature(Dictionary<string, string> parameters)
+		{
+			string maybeSignature = parameters["toopher_sig"];
+			parameters.Remove("toopher_sig");
+			var signatureValid = false;
+			try
+			{
+				var computedSig = Signature(consumerSecret, parameters);
+				signatureValid = computedSig == maybeSignature;
+			} catch (Exception e)
+			{
+				throw new SignatureValidationError("Error while calculating signature: " + e);
+			}
+
+			if (!signatureValid)
+			{
+				throw new SignatureValidationError("Computed signature does not match");
 			}
 		}
 

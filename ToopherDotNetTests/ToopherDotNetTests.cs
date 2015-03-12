@@ -220,9 +220,11 @@ namespace ToopherDotNetTests
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
 			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "5");
 			try
 			{
-				Assert.IsNotNull(api.ValidatePostback(data, REQUEST_TOKEN, 5));
+				Assert.IsNotNull(api.ValidatePostback(data, REQUEST_TOKEN, extras));
 			} catch (Exception)
 			{
 				Assert.Fail("Valid signature, timestamp, and session token did not return validated data");
@@ -239,7 +241,9 @@ namespace ToopherDotNetTests
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
 			data.Add("toopher_sig", new string[]{"invalid"});
-			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "5");
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, extras));
 			Assert.That(ex.Message, Is.StringContaining("Computed signature does not match"));
 		}
 
@@ -253,7 +257,9 @@ namespace ToopherDotNetTests
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
 			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
-			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "5");
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, extras));
 			Assert.That(ex.Message, Is.StringContaining("TTL Expired"));
 		}
 
@@ -267,7 +273,10 @@ namespace ToopherDotNetTests
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{"invalid token"});
 			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
-			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "5");
+
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, extras));
 			Assert.That(ex.Message, Is.StringContaining("Session token does not match expected value"));
 		}
 
@@ -280,7 +289,9 @@ namespace ToopherDotNetTests
 			data.Add("foo", new string[]{"bar"});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
 			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
-			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "5");
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, extras));
 			Assert.That(ex.Message, Is.StringContaining("Missing required keys: timestamp"));
 		}
 
@@ -293,7 +304,9 @@ namespace ToopherDotNetTests
 			data.Add("foo", new string[]{"bar"});
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("session_token", new string[]{REQUEST_TOKEN});
-			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "5");
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, extras));
 			Assert.That(ex.Message, Is.StringContaining("Missing required keys: toopher_sig"));
 		}
 
@@ -306,7 +319,9 @@ namespace ToopherDotNetTests
 			data.Add("foo", new string[]{"bar"});
 			data.Add("timestamp", new string[]{((int)(TEST_DATE - new DateTime(1970, 1, 1)).TotalSeconds).ToString()});
 			data.Add("toopher_sig", new string[]{"6d2c7GlQssGmeYYGpcf+V/kirOI="});
-			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, 5));
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "5");
+			var ex = Assert.Throws<Toopher.SignatureValidationError>(() => api.ValidatePostback(data, REQUEST_TOKEN, extras));
 			Assert.That(ex.Message, Is.StringContaining("Missing required keys: session_token"));
 		}
 
@@ -322,9 +337,11 @@ namespace ToopherDotNetTests
 				{"session_token", REQUEST_TOKEN},
 				{"toopher_sig", "6d2c7GlQssGmeYYGpcf+V/kirOI="}
 			};
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "5");
 			try
 			{
-				Assert.IsNotNull(api.ValidatePostback(data, REQUEST_TOKEN, 5));
+				Assert.IsNotNull(api.ValidatePostback(data, REQUEST_TOKEN, extras));
 			} catch (Exception)
 			{
 				Assert.Fail("ValidatePostback overload for Dictionary<string, string> was not successful");
