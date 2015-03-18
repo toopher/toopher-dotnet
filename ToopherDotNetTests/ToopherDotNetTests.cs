@@ -280,6 +280,82 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void IsAuthenticationGrantedWithAuthenticationRequestGrantedReturnsTrue()
+		{
+			var api = GetToopherIframeApi();
+			Assert.IsTrue(api.IsAuthenticationGranted(GetUrlencodedData(GetAuthenticationRequestData()), REQUEST_TOKEN));
+		}
+
+		[Test]
+		public void IsAuthenticationGrantedWithAuthenticationRequestGrantedAndExtrasReturnsTrue()
+		{
+			var api = GetToopherIframeApi();
+			Dictionary<string, string> extras = new Dictionary<string, string>();
+			extras.Add("ttl", "5");
+			Assert.IsTrue(api.IsAuthenticationGranted(GetUrlencodedData(GetAuthenticationRequestData()), REQUEST_TOKEN, extras));
+		}
+
+		[Test]
+		public void IsAuthenticationGrantedWithNoTokenReturnsTrue()
+		{
+			var api = GetToopherIframeApi();
+			Assert.IsTrue(api.IsAuthenticationGranted(GetUrlencodedData(GetAuthenticationRequestData())));
+		}
+
+		[Test]
+		public void IsAuthenticationGrantedWithAuthenticationRequestNotGrantedReturnsFalse()
+		{
+			var api = GetToopherIframeApi();
+			var authData = GetAuthenticationRequestData();
+			authData.Set("granted", "false");
+			authData.Set("toopher_sig", "nADNKdly9zA2IpczD6gvDumM48I=");
+			Assert.IsFalse(api.IsAuthenticationGranted(GetUrlencodedData(authData)));
+		}
+
+		[Test]
+		public void IsAuthenticationGrantedWithPairingReturnsFalse()
+		{
+			var api = GetToopherIframeApi();
+			Assert.IsFalse(api.IsAuthenticationGranted(GetUrlencodedData(GetPairingData())));
+		}
+
+		[Test]
+		public void IsAuthenticationGrantedWithUserReturnsFalse()
+		{
+			var api = GetToopherIframeApi();
+			Assert.IsFalse(api.IsAuthenticationGranted(GetUrlencodedData(GetUserData())));
+		}
+
+		[Test]
+		public void IsAuthenticationGrantedWithSignatureValidationErrorReturnsFalse()
+		{
+			var api = GetToopherIframeApi();
+			var authData = GetAuthenticationRequestData();
+			authData.Remove("id");
+			Assert.IsFalse(api.IsAuthenticationGranted(GetUrlencodedData(authData)));
+		}
+
+		[Test]
+		public void IsAuthenticationGrantedWithRequestErrorReturnsFalse()
+		{
+			var api = GetToopherIframeApi();
+			var authData = GetAuthenticationRequestData();
+			authData.Set("resource_type", "invalid");
+			authData.Set("toopher_sig", "xEY+oOtJcdMsmTLp6eOy9isO/xQ=");
+			Assert.IsFalse(api.IsAuthenticationGranted(GetUrlencodedData(authData)));
+		}
+
+		[Test]
+		public void IsAuthenticationGrantedWithUserDisabledErrorReturnsTrue()
+		{
+			var api = GetToopherIframeApi();
+			var authData = GetAuthenticationRequestData();
+			authData.Set("error_code", "704");
+			authData.Set("error_message", "The specified user has disabled Toopher authentication.");
+			Assert.IsTrue(api.IsAuthenticationGranted(GetUrlencodedData(authData)));
+		}
+
+		[Test]
 		public void ProcessPostbackWithGoodSignatureReturnsAuthenticationRequest()
 		{
 			ToopherIframe.SetDateOverride(TEST_DATE);

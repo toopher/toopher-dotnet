@@ -131,6 +131,34 @@ namespace Toopher
 		}
 
 		/// <summary>
+		/// Evaluate whether AuthenticationRequest has been granted
+		/// </summary>
+		/// <param name="parameters">The data returned from the iFrame.</param>
+		/// <param name="requestToken">The request token</param>
+		/// <param name="extras">An optional Dictionary of extra parameters.</param>
+		/// <returns>true or false</returns>
+		public bool IsAuthenticationGranted(Dictionary<string, string> parameters, string requestToken = "", Dictionary<string, string> extras = null)
+		{
+			try
+			{
+				AuthenticationRequest authenticationRequest = (AuthenticationRequest) ProcessPostback(parameters, requestToken, extras);
+				if (!authenticationRequest.pending && authenticationRequest.granted)
+				{
+					return true;
+				} else
+				{
+					return false;
+				}
+			} catch (UserDisabledError)
+			{
+				return true;
+			} catch (Exception)
+			{
+				return false;
+			}
+		}
+
+		/// <summary>
 		/// Verify the authenticity of data returned from the Toopher iFrame
 		/// </summary>
 		/// <param name="parameters">The data returned from the iFrame.</param>
