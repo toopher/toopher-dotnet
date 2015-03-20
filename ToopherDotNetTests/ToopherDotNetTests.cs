@@ -313,6 +313,18 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void IsAuthenticationGrantedWithAuthenticationRequestGrantedAndPendingReturnsFalse()
+		{
+			var api = GetToopherIframeApi();
+			var authData = GetAuthenticationRequestData();
+			authData.Set("granted", "true");
+			authData.Set("pending", "true");
+			authData.Set("toopher_sig", "vmWBQCy8Py5PVkMZRppbCG7cm0w=");
+			Console.WriteLine("here's the test");
+			Assert.IsFalse(api.IsAuthenticationGranted(GetUrlencodedData(authData)));
+		}
+
+		[Test]
 		public void IsAuthenticationGrantedWithPairingReturnsFalse()
 		{
 			var api = GetToopherIframeApi();
