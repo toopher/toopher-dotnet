@@ -12,12 +12,10 @@ namespace Toopher
 
 		public static void Main (string[] args)
 		{
-			Console.WriteLine ("======================================");
-			Console.WriteLine ("Library Usage Demo");
+			Console.WriteLine ();
+			Console.WriteLine ("Toopher Library Demo");
 			Console.WriteLine ("======================================");
 			Console.WriteLine ("");
-			Console.WriteLine ("Setup Credentials");
-			Console.WriteLine ("--------------------------------------");
 			string consumerKey = System.Environment.GetEnvironmentVariable ("TOOPHER_CONSUMER_KEY");
 			string consumerSecret = System.Environment.GetEnvironmentVariable ("TOOPHER_CONSUMER_SECRET");
 			if ((consumerKey == null) || (consumerSecret == null)) {
@@ -91,6 +89,7 @@ namespace Toopher
 			}
 
 			while (true) {
+				Console.WriteLine ();
 				Console.WriteLine ("Step 2: Authenticate log in");
 				Console.WriteLine ("--------------------------------------");
 				Console.Write (String.Format ("Enter a terminal name for this authentication request [\"{0}\"]: ", DEFAULT_TERMINAL_NAME));
@@ -131,7 +130,7 @@ namespace Toopher
 					}
 				}
 
-				Console.WriteLine ("Press return to authenticate again, or Ctrl-C to exit");
+				Console.Write ("Press return to authenticate again, or Ctrl-C to exit.");
 				Console.ReadLine ();
 			}
 		}
