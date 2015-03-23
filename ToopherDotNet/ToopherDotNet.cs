@@ -103,7 +103,7 @@ namespace Toopher
 		/// <param name="userName">Unique name that identifies this user. This will be displayed to the user on their mobile device when they pair or authenticate.</param>
 		/// <param name="resetEmail">Email address that the user has access to. In case the user has lost or cannot access their mobile device, Toopher will send a reset email to this address.</param>
 		/// <param name="extras">An optional Dictionary of extra parameters to provide to the API.</param>
-		/// <returns>A string URL that can be used to retrieve the Pairing iFrame by the user's browser.</reeturns>
+		/// <returns>A string URL that can be used to retrieve the Pairing iFrame by the user's browser.</returns>
 		public string GetUserManagementUrl(string userName, string resetEmail="", Dictionary<string, string> extras = null)
 		{
 			NameValueCollection parameters = new NameValueCollection();
