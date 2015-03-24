@@ -182,7 +182,7 @@ namespace Toopher
 			} else
 			{
 				ValidatePostback(toopherData, requestToken, extras);
-				ToopherApi api = new ToopherApi(consumerKey, consumerSecret);
+				ToopherApi api = new ToopherApi(consumerKey, consumerSecret, baseUrl);
 				var resourceType = toopherData["resource_type"];
 				if (resourceType == "authentication_request")
 				{

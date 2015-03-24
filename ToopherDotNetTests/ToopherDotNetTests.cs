@@ -320,7 +320,6 @@ namespace ToopherDotNetTests
 			authData.Set("granted", "true");
 			authData.Set("pending", "true");
 			authData.Set("toopher_sig", "vmWBQCy8Py5PVkMZRppbCG7cm0w=");
-			Console.WriteLine("here's the test");
 			Assert.IsFalse(api.IsAuthenticationGranted(GetUrlencodedData(authData)));
 		}
 
