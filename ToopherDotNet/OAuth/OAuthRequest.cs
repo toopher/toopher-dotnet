@@ -118,7 +118,7 @@ namespace OAuth
             }
 
             var authorization = sb.ToString();
-            return authorization;
+            return authorization.TrimEnd(new char[]{ ',' });
         }
 
         #endregion
