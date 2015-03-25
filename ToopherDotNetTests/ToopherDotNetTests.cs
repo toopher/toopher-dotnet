@@ -58,6 +58,7 @@ namespace ToopherDotNetTests
 		{
 			static public String LastRequestMethod { get; set; }
 			static public NameValueCollection LastRequestData { get; set; }
+			static public String LastRequestUrl { get; set; }
 			static public Exception ReturnException { get; set; }
 			static public string ReturnValue { get; set; }
 			static public string ReturnValueArray { get; set; }
@@ -79,12 +80,14 @@ namespace ToopherDotNetTests
 
 			override public byte[] UploadValues(string requestUri, string method, NameValueCollection parameters)
 			{
+				LastRequestUrl = requestUri;
 				LastRequestMethod = "POST";
 				LastRequestData = parameters;
 				return System.Text.Encoding.UTF8.GetBytes(doit());
 			}
 			override public string DownloadString(string requestUri)
 			{
+				LastRequestUrl = requestUri;
 				LastRequestMethod = "GET";
 				LastRequestData = this.QueryString;
 				return doit();
@@ -102,7 +105,7 @@ namespace ToopherDotNetTests
 
 		public ToopherApi GetToopherApi()
 		{
-			return new ToopherApi("key", "secret", null, typeof(WebClientMock));
+			return new ToopherApi("key", "secret", DEFAULT_BASE_URL, typeof(WebClientMock));
 		}
 	}
 
@@ -562,6 +565,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.Pair("some user", "awkward turtle");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/create");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["pairing_phrase"], "awkward turtle");
 			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some user");
@@ -574,6 +578,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.Pair("some user", "555-555-5555");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/create/sms");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["phone_number"], "555-555-5555");
 			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some user");
@@ -586,6 +591,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.Pair("some user");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/create/qr");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some user");
 			Assert.AreEqual(pairing.id, "1");
@@ -597,6 +603,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.Pair("some user", "awkward turtle", extras: new Dictionary<string,string>(){{"test_param", "42"}});
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/create");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["test_param"], "42");
 			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some user");
@@ -611,6 +618,7 @@ namespace ToopherDotNetTests
 			string pairingId = Guid.NewGuid().ToString();
 			WebClientMock.ReturnValue = @"{""id"":""" + pairingId + @""", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"",""requester_specified_id"":""requesterSpecifiedId"",""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}}";
 			AuthenticationRequest auth = api.Authenticate(pairingId, "test terminal");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/authentication_requests/initiate");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["pairing_id"], pairingId);
 			Assert.AreEqual(WebClientMock.LastRequestData["terminal_name"], "test terminal");
@@ -623,6 +631,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
 			AuthenticationRequest auth = api.Authenticate("some other user", requesterSpecifiedId: "requester specified id", extras: new Dictionary<String, String>(){{ "random_key" , "42" }});
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/authentication_requests/initiate");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "some other user");
 			Assert.AreEqual(WebClientMock.LastRequestData["requester_specified_terminal_id"], "requester specified id");
@@ -631,11 +640,12 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
-		public void ArbitraryParamtersOnAuthenticateTest()
+		public void ArbitraryParametersOnAuthenticateTest()
 		{
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
 			AuthenticationRequest auth = api.Authenticate("1", "test terminal", extras: new Dictionary<string, string>(){{ "test_param", "42" }});
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/authentication_requests/initiate");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["test_param"], "42");
 			Assert.AreEqual(auth.id, "1");
@@ -690,6 +700,7 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = PAIRING_RESPONSE;
 			Pairing pairing = api.advanced.pairings.GetById("1");
 			Assert.IsInstanceOf<Pairing>(pairing);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(pairing.id, "1");
 			Assert.AreEqual(pairing.user.name, "some user");
@@ -703,6 +714,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""enabled"":true, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""random_key"":""84""}";
 			Pairing pairing = api.advanced.pairings.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(pairing.id, "1");
 			Assert.AreEqual(pairing.user.name, "some user");
@@ -717,6 +729,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
 			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/authentication_requests/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(auth.id, "1");
 			Assert.IsFalse(auth.pending);
@@ -732,6 +745,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""pending"":false, ""granted"":true, ""automated"":false, ""reason_code"":1, ""reason"":""its a test"", ""terminal"":{""id"":""1"", ""name"":""test terminal"", ""requester_specified_id"": ""requesterSpecifiedId"", ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}}, ""user"":{""id"":""1"",""name"":""some user"", ""toopher_authentication_enabled"":true}, ""action"": {""id"":""1"", ""name"":""actionName""}, ""random_key"":""84""}";
 			AuthenticationRequest auth = api.advanced.authenticationRequests.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/authentication_requests/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(auth.id, "1");
 			Assert.IsFalse(auth.pending);
@@ -749,6 +763,7 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = USER_RESPONSE;
 			User user = api.advanced.users.GetById("1");
 			Assert.IsInstanceOf<User>(user);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/users/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(user.id, "1");
 			Assert.AreEqual(user.name, "userName");
@@ -761,6 +776,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true, ""random_key"":""84""}";
 			User user = api.advanced.users.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/users/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(user.id, "1");
 			Assert.AreEqual(user.name, "userName");
@@ -775,7 +791,9 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValueArray = @"[{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}]";
 			WebClientMock.ReturnValue = USER_RESPONSE;
 			User user = api.advanced.users.GetByName("userName");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/users");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
+			Assert.AreEqual(WebClientMock.LastRequestData["name"], "userName");
 			Assert.AreEqual(user.id, "1");
 			Assert.AreEqual(user.name, "userName");
 			Assert.IsTrue(user.toopherAuthenticationEnabled);
@@ -788,7 +806,9 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = USER_RESPONSE;
 			User user = api.advanced.users.Create("userName");
 			Assert.IsInstanceOf<User>(user);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/users/create");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["name"], "userName");
 			Assert.AreEqual(user.id, "1");
 			Assert.AreEqual(user.name, "userName");
 			Assert.IsTrue(user.toopherAuthenticationEnabled);
@@ -803,8 +823,10 @@ namespace ToopherDotNetTests
 			parameters.Add("foo", "bar");
 			User user = api.advanced.users.Create("userName", parameters);
 			Assert.IsInstanceOf<User>(user);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/users/create");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["foo"], "bar");
+			Assert.AreEqual(WebClientMock.LastRequestData["name"], "userName");
 			Assert.AreEqual(user.id, "1");
 			Assert.AreEqual(user.name, "userName");
 			Assert.IsTrue(user.toopherAuthenticationEnabled);
@@ -817,6 +839,7 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = USER_TERMINAL_RESPONSE;
 			UserTerminal userTerminal = api.advanced.userTerminals.GetById("1");
 			Assert.IsInstanceOf<UserTerminal>(userTerminal);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/user_terminals/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(userTerminal.id, "1");
 			Assert.AreEqual(userTerminal.name, "userTerminalName");
@@ -830,6 +853,7 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userTerminalName"", ""requester_specified_id"":""requesterSpecifiedId"",""random_key"":""84"", ""user"":{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":true}}";
 			UserTerminal userTerminal = api.advanced.userTerminals.GetById("1");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/user_terminals/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(userTerminal.id, "1");
 			Assert.AreEqual(userTerminal.name, "userTerminalName");
@@ -843,7 +867,11 @@ namespace ToopherDotNetTests
 			var api = GetToopherApi();
 			WebClientMock.ReturnValue = USER_TERMINAL_RESPONSE;
 			UserTerminal userTerminal = api.advanced.userTerminals.Create("userName", "userTerminalName", "requesterSpecifiedId");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/user_terminals/create");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "userName");
+			Assert.AreEqual(WebClientMock.LastRequestData["terminal_name"], "userTerminalName");
+			Assert.AreEqual(WebClientMock.LastRequestData["requester_specified_id"], "requesterSpecifiedId");
 			Assert.AreEqual(userTerminal.id, "1");
 			Assert.AreEqual(userTerminal.name, "userTerminalName");
 			Assert.AreEqual(userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
@@ -858,8 +886,12 @@ namespace ToopherDotNetTests
 			NameValueCollection parameters = new NameValueCollection();
 			parameters.Add("foo", "bar");
 			UserTerminal userTerminal = api.advanced.userTerminals.Create("userName", "userTerminalName", "requesterSpecifiedId", parameters);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/user_terminals/create");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["foo"], "bar");
+			Assert.AreEqual(WebClientMock.LastRequestData["user_name"], "userName");
+			Assert.AreEqual(WebClientMock.LastRequestData["terminal_name"], "userTerminalName");
+			Assert.AreEqual(WebClientMock.LastRequestData["requester_specified_id"], "requesterSpecifiedId");
 			Assert.AreEqual(userTerminal.id, "1");
 			Assert.AreEqual(userTerminal.name, "userTerminalName");
 			Assert.AreEqual(userTerminal.requesterSpecifiedId, "requesterSpecifiedId");
@@ -943,6 +975,7 @@ namespace ToopherDotNetTests
 			Pairing pairing = new Pairing(PAIRING_DICT, api);
 			pairing.RefreshFromServer();
 			Assert.IsInstanceOf<Pairing>(pairing);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(pairing.id, "1");
 			Assert.AreEqual(pairing.user.name, "userNameChanged");
@@ -958,7 +991,22 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = @"{""url"":""" + link + @"""}";
 			Pairing pairing = new Pairing(PAIRING_DICT, api);
 			string returnedLink = pairing.GetResetLink();
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/1/generate_reset_link");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(returnedLink, link);
+		}
+
+		[Test]
+		public void PairingGetResetLinkWithExtrasTest()
+		{
+			var api = GetToopherApi();
+			string link = "http://api.toopher.test/v1/pairings/1/reset?reset_authorization=abcde";
+			WebClientMock.ReturnValue = @"{""url"":""" + link + @"""}";
+			Pairing pairing = new Pairing(PAIRING_DICT, api);
+			string returnedLink = pairing.GetResetLink(new Dictionary<String, String>(){{ "foo" , "bar" }});
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/1/generate_reset_link");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["foo"], "bar");
 			Assert.AreEqual(returnedLink, link);
 		}
 
@@ -969,8 +1017,22 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = @"{}";
 			Pairing pairing = new Pairing(PAIRING_DICT, api);
 			pairing.EmailResetLink("test@test.com");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/1/send_reset_link");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["reset_email"], "test@test.com");
+		}
+
+		[Test]
+		public void PairingEmailResetLinkWithExtrasTest()
+		{
+			var api = GetToopherApi();
+			WebClientMock.ReturnValue = @"{}";
+			Pairing pairing = new Pairing(PAIRING_DICT, api);
+			pairing.EmailResetLink("test@test.com", new Dictionary<String, String>(){{ "foo" , "bar" }});
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/pairings/1/send_reset_link");
+			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
+			Assert.AreEqual(WebClientMock.LastRequestData["reset_email"], "test@test.com");
+			Assert.AreEqual(WebClientMock.LastRequestData["foo"], "bar");
 		}
 
 		[Test]
@@ -980,6 +1042,7 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = @"{}";
 			Pairing pairing = new Pairing(PAIRING_DICT, api);
 			pairing.GetQrCodeImage();
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/qr/pairings/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 		}
 	}
@@ -1019,6 +1082,7 @@ namespace ToopherDotNetTests
 			AuthenticationRequest auth = new AuthenticationRequest(AUTH_REQUEST_DICT, api);
 			auth.RefreshFromServer();
 			Assert.IsInstanceOf<AuthenticationRequest>(auth);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/authentication_requests/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.IsTrue(auth.pending);
 			Assert.AreEqual(auth.reasonCode, 2);
@@ -1034,6 +1098,7 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = AUTH_REQUEST_RESPONSE;
 			AuthenticationRequest auth = new AuthenticationRequest(AUTH_REQUEST_DICT, api);
 			auth.GrantWithOtp("123456");
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/authentication_requests/1/otp_auth");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["otp"], "123456");
 			Assert.AreEqual(auth.id, "1");
@@ -1065,6 +1130,7 @@ namespace ToopherDotNetTests
 			User user = new User(USER_DICT, api);
 			user.RefreshFromServer();
 			Assert.IsInstanceOf<User>(user);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/users/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(user.id, "1");
 			Assert.AreEqual(user.name, "userNameChanged");
@@ -1078,6 +1144,7 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = USER_RESPONSE;
 			User user = new User(USER_DICT, api);
 			user.EnableToopherAuthentication();
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/users/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["toopher_authentication_enabled"], "true");
 			Assert.AreEqual(user.id, "1");
@@ -1091,6 +1158,7 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = @"{""id"":""1"", ""name"":""userName"", ""toopher_authentication_enabled"":false}";
 			User user = new User(USER_DICT, api);
 			user.DisableToopherAuthentication();
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/users/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["toopher_authentication_enabled"], "false");
 			Assert.AreEqual(user.id, "1");
@@ -1104,6 +1172,7 @@ namespace ToopherDotNetTests
 			WebClientMock.ReturnValue = USER_RESPONSE;
 			User user = new User(USER_DICT, api);
 			user.Reset();
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/users/reset");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "POST");
 			Assert.AreEqual(WebClientMock.LastRequestData["name"], "userName");
 		}
@@ -1136,6 +1205,7 @@ namespace ToopherDotNetTests
 			UserTerminal userTerminal = new UserTerminal(USER_TERMINAL_DICT, api);
 			userTerminal.RefreshFromServer();
 			Assert.IsInstanceOf<UserTerminal>(userTerminal);
+			Assert.AreEqual(WebClientMock.LastRequestUrl, "https://api.toopher.test/v1/user_terminals/1");
 			Assert.AreEqual(WebClientMock.LastRequestMethod, "GET");
 			Assert.AreEqual(userTerminal.id, "1");
 			Assert.AreEqual(userTerminal.name, "userTerminalNameChanged");
@@ -1154,6 +1224,43 @@ namespace ToopherDotNetTests
 			Toopher.Action action = new Toopher.Action(response);
 			Assert.AreEqual(action.id, "1");
 			Assert.AreEqual(action.name, "actionName");
+		}
+	}
+
+	[TestFixture()]
+	public class ToopherHelperTests : TestBase
+	{
+		[Test]
+		public void AddExtrasToCollectionTest()
+		{
+			NameValueCollection parameters = new NameValueCollection();
+			parameters.Add("foo", "bar");
+			Dictionary<string, string> extras = new Dictionary<string, string>(){{"hello", "world"}};
+			parameters = ToopherHelper.AddExtrasToCollection(parameters, extras);
+			Assert.AreEqual(parameters["foo"], "bar");
+			Assert.AreEqual(parameters["hello"], "world");
+		}
+	}
+
+	[TestFixture()]
+	public class ErrorCodeTests : TestBase
+	{
+		[Test]
+		public void UserDisabledErrorCodeTest()
+		{
+			Assert.AreEqual(UserDisabledError.ERROR_CODE, 704);
+		}
+
+		[Test]
+		public void UserUnknownErrorCodeTest()
+		{
+			Assert.AreEqual(UserUnknownError.ERROR_CODE, 705);
+		}
+
+		[Test]
+		public void TerminalUnknownErrorCodeTest()
+		{
+			Assert.AreEqual(TerminalUnknownError.ERROR_CODE, 706);
 		}
 	}
 }
