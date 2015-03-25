@@ -49,13 +49,7 @@ namespace Toopher
 		{
 			this.consumerKey = consumerKey;
 			this.consumerSecret = consumerSecret;
-			if (baseUrl != null)
-			{
-				this.baseUrl = baseUrl;
-			} else
-			{
-				this.baseUrl = DEFAULT_BASE_URL;
-			}
+			this.baseUrl = baseUrl ?? DEFAULT_BASE_URL;
 		}
 
 		/// <summary>
@@ -74,7 +68,7 @@ namespace Toopher
 			long ttl;
 			if (extras != null && extras.ContainsKey("ttl"))
 			{
-				ttl = Int32.Parse(extras["ttl"]);
+				ttl = Int64.Parse(extras["ttl"]);
 				extras.Remove("ttl");
 			} else
 			{
@@ -86,14 +80,7 @@ namespace Toopher
 			parameters.Add("session_token", requestToken);
 			parameters.Add("action_name", actionName);
 			parameters.Add("requester_metadata", requesterMetadata);
-
-			if (extras != null)
-			{
-				foreach (KeyValuePair<string, string> kvp in extras)
-				{
-					parameters.Add(kvp.Key, kvp.Value);
-				}
-			}
+			parameters = ToopherHelper.AddExtrasToCollection(parameters, extras);
 			return GetOauthUrl(baseUrl + "web/authenticate", parameters, ttl);
 		}
 
@@ -110,7 +97,7 @@ namespace Toopher
 			long ttl;
 			if (extras != null && extras.ContainsKey("ttl"))
 			{
-				ttl = Int32.Parse(extras["ttl"]);
+				ttl = Int64.Parse(extras["ttl"]);
 				extras.Remove("ttl");
 			} else
 			{
@@ -119,14 +106,7 @@ namespace Toopher
 
 			parameters.Add("username", userName);
 			parameters.Add("reset_email", resetEmail);
-
-			if (extras != null)
-			{
-				foreach (KeyValuePair<string, string> kvp in extras)
-				{
-					parameters.Add(kvp.Key, kvp.Value);
-				}
-			}
+			parameters = ToopherHelper.AddExtrasToCollection(parameters, extras);
 			return GetOauthUrl(baseUrl + "web/manage_user", parameters, ttl);
 		}
 
@@ -142,13 +122,7 @@ namespace Toopher
 			try
 			{
 				AuthenticationRequest authenticationRequest = (AuthenticationRequest) ProcessPostback(parameters, requestToken, extras);
-				if (!authenticationRequest.pending && authenticationRequest.granted)
-				{
-					return true;
-				} else
-				{
-					return false;
-				}
+				return !authenticationRequest.pending && authenticationRequest.granted;
 			} catch (UserDisabledError)
 			{
 				return true;
@@ -171,31 +145,28 @@ namespace Toopher
 			if (toopherData.ContainsKey("error_code"))
 			{
 				var errorCode = Int32.Parse(toopherData["error_code"]);
-				var errorMessage = toopherData["error_message"];
 				if (errorCode == UserDisabledError.ERROR_CODE)
 				{
 					throw new UserDisabledError();
 				} else
 				{
-					throw new RequestError(errorMessage);
+					throw new RequestError(toopherData["error_message"]);
 				}
 			} else
 			{
 				ValidatePostback(toopherData, requestToken, extras);
 				ToopherApi api = new ToopherApi(consumerKey, consumerSecret, baseUrl);
-				var resourceType = toopherData["resource_type"];
-				if (resourceType == "authentication_request")
+
+				switch (toopherData["resource_type"])
 				{
-					return new AuthenticationRequest(CreateAuthenticationRequestDict(toopherData), api);
-				} else if (resourceType == "pairing")
-				{
-					return new Pairing(CreatePairingDict(toopherData), api);
-				} else if (resourceType == "requester_user")
-				{
-					return new User(CreateUserDict(toopherData), api);
-				} else
-				{
-					throw new RequestError ("The postback resource type is not valid: " + resourceType);
+					case "authentication_request":
+						return new AuthenticationRequest(CreateAuthenticationRequestDict(toopherData), api);
+					case "pairing":
+						return new Pairing(CreatePairingDict(toopherData), api);
+					case "requester_user":
+						return new User(CreateUserDict(toopherData), api);
+					default:
+						throw new RequestError("The postback resource type is not valid: " + toopherData["resource_type"]);
 				}
 			}
 		}
@@ -243,8 +214,8 @@ namespace Toopher
 
 		private void CheckIfSignatureIsExpired(string timestamp, Dictionary<string, string> extras)
 		{
-			var ttl = (extras != null && extras.ContainsKey("ttl")) ? Int32.Parse(extras["ttl"]) : DEFAULT_TTL;
-			var ttlValid = (int)(GetUnixEpochTimeInSeconds() - ttl) < Int32.Parse(timestamp);
+			var ttl = (extras != null && extras.ContainsKey("ttl")) ? Int64.Parse(extras["ttl"]) : DEFAULT_TTL;
+			var ttlValid = GetUnixEpochTimeInSeconds() - ttl < Int64.Parse(timestamp);
 			if (!ttlValid)
 			{
 				throw new SignatureValidationError("TTL Expired");
@@ -338,19 +309,19 @@ namespace Toopher
 			return url + "?" + requestParams + "&" + oauthParams;
 		}
 
-		private static int GetUnixEpochTimeInSeconds()
+		private static long GetUnixEpochTimeInSeconds()
 		{
 			TimeSpan t = (GetDate() - new DateTime(1970, 1, 1));
-			return (int)t.TotalSeconds;
+			return (long)t.TotalSeconds;
 		}
 
 		private static string Signature(string secret, Dictionary<string, string> data)
 		{
-			Dictionary<string, string> sortedData = data.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => OAuthTools.UrlEncodeStrict(x.Value).Replace("%20", "+"));
-			string joinedString = string.Join("&", (sortedData.Select(d => d.Key + "=" + d.Value).ToArray()));
+			NameValueCollection parameters = ToopherHelper.AddExtrasToCollection(new NameValueCollection(), data);
+			string urlEncodedData = UrlEncodeParameters(parameters);
 
 			byte[] keyBytes = Encoding.UTF8.GetBytes(secret);
-			byte[] messageBytes = Encoding.UTF8.GetBytes(joinedString);
+			byte[] messageBytes = Encoding.UTF8.GetBytes(urlEncodedData);
 
 			using (var hmac = new HMACSHA1(keyBytes))
 			{
@@ -364,7 +335,7 @@ namespace Toopher
 			WebParameterCollection collection = new WebParameterCollection(parameters);
 			foreach (var parameter in collection)
 			{
-				parameter.Value = OAuthTools.UrlEncodeStrict(parameter.Value).Replace("%20", "+");
+				parameter.Value = Uri.EscapeDataString(parameter.Value).Replace("%20", "+");
 			}
 			collection.Sort((x, y) => x.Name.Equals(y.Name) ? x.Value.CompareTo(y.Value) : x.Name.CompareTo(y.Name));
 			return OAuthTools.Concatenate(collection, "=", "&");
@@ -418,20 +389,8 @@ namespace Toopher
 			this.advanced = new ToopherApi.AdvancedApiUsageFactory(this);
 			this.consumerKey = consumerKey;
 			this.consumerSecret = consumerSecret;
-			if (baseUrl != null)
-			{
-				this.baseUrl = baseUrl;
-			} else
-			{
-				this.baseUrl = ToopherApi.DEFAULT_BASE_URL;
-			}
-			if (webClientProxyType != null)
-			{
-				this.webClientProxyType = webClientProxyType;
-			} else
-			{
-				this.webClientProxyType = typeof(WebClientProxy);
-			}
+			this.baseUrl = baseUrl ?? DEFAULT_BASE_URL;
+			this.webClientProxyType = webClientProxyType ?? typeof(WebClientProxy);
 		}
 
 		/// <summary>
@@ -467,14 +426,7 @@ namespace Toopher
 				endpoint = "pairings/create/qr";
 			}
 
-			if (extras != null)
-			{
-				foreach (KeyValuePair<string, string> kvp in extras)
-				{
-					parameters.Add(kvp.Key, kvp.Value);
-				}
-			}
-
+			parameters = ToopherHelper.AddExtrasToCollection(parameters, extras);
 			var json = advanced.raw.post(endpoint, parameters);
 			return new Pairing(json, this);
 		}
@@ -515,14 +467,7 @@ namespace Toopher
 				parameters.Add("action_name", actionName);
 			}
 
-			if (extras != null)
-			{
-				foreach (KeyValuePair<string, string> kvp in extras)
-				{
-					parameters.Add(kvp.Key, kvp.Value);
-				}
-			}
-
+			parameters = ToopherHelper.AddExtrasToCollection(parameters, extras);
 			var json = advanced.raw.post(endpoint, parameters);
 			return new AuthenticationRequest(json, this);
 		}
@@ -571,7 +516,7 @@ namespace Toopher
 				/// <returns>A <see cref="Pairing"/> object.</returns>
 				public Pairing GetById(string pairingId)
 				{
-					string endpoint = string.Format("pairings/{0}", pairingId);
+					string endpoint = "pairings/" + pairingId;
 					var json = api.advanced.raw.get(endpoint);
 					return new Pairing(json, api);
 				}
@@ -590,7 +535,7 @@ namespace Toopher
 				/// <returns>A <see cref="AuthenticationRequest"/> object.</returns>
 				public AuthenticationRequest GetById(string authenticationRequestId)
 				{
-					string endpoint = string.Format("authentication_requests/{0}", authenticationRequestId);
+					string endpoint = "authentication_requests/" + authenticationRequestId;
 					var json = api.advanced.raw.get(endpoint);
 					return new AuthenticationRequest(json, api);
 				}
@@ -609,7 +554,7 @@ namespace Toopher
 				/// <returns>A <see cref="User"/> object.</returns>
 				public User GetById(string userId)
 				{
-					string endpoint = string.Format("users/{0}", userId);
+					string endpoint = "users/" + userId;
 					var json = api.advanced.raw.get(endpoint);
 					return new User(json, api);
 				}
@@ -629,11 +574,11 @@ namespace Toopher
 
 					if (json.Count() > 1)
 					{
-						throw new RequestError(string.Format("More than one user with name {0}", userName));
+						throw new RequestError("More than one user with name " + userName);
 					}
 					if (json.Count() == 0)
 					{
-						throw new RequestError(string.Format("No users with name {0}", userName));
+						throw new RequestError("No users with name " + userName);
 					}
 					return new User((JsonObject)json[0], api);
 				}
@@ -670,7 +615,7 @@ namespace Toopher
 				/// <returns>A <see cref="UserTerminal"/> object.</returns>
 				public UserTerminal GetById(string userTerminalId)
 				{
-					string endpoint = string.Format("user_terminals/{0}", userTerminalId);
+					string endpoint = "user_terminals/" + userTerminalId;
 					var json = api.advanced.raw.get(endpoint);
 					return new UserTerminal(json, api);
 				}
@@ -732,8 +677,6 @@ namespace Toopher
 					client.Method = method;
 
 					string auth = client.GetAuthorizationHeader(parameters);
-					// FIXME: OAuth library puts extraneous comma at end, workaround: remove it if present
-					auth = auth.TrimEnd(new char[]{ ',' });
 
 					using (WebClientProxy wClient = (WebClientProxy)Activator.CreateInstance(api.webClientProxyType))
 					{
@@ -816,26 +759,23 @@ namespace Toopher
 
 				private void parseRequestError(JsonObject err)
 				{
-					long errCode = (long)err["error_code"];
 					string errMessage = (string)err["error_message"];
-					if (errCode == UserDisabledError.ERROR_CODE)
+					switch ((long)err["error_code"])
 					{
-						throw new UserDisabledError();
-					} else if (errCode == UserUnknownError.ERROR_CODE)
-					{
-						throw new UserUnknownError();
-					} else if (errCode == TerminalUnknownError.ERROR_CODE)
-					{
-						throw new TerminalUnknownError();
-					} else
-					{
-						if (errMessage.ToLower().Contains("pairing has been deactivated") || errMessage.ToLower().Contains("pairing has not been authorized"))
-						{
-							throw new PairingDeactivatedError();
-						} else
-						{
-							throw new RequestError(errMessage);
-						}
+						case UserDisabledError.ERROR_CODE:
+							throw new UserDisabledError();
+						case UserUnknownError.ERROR_CODE:
+							throw new UserUnknownError();
+						case TerminalUnknownError.ERROR_CODE:
+							throw new TerminalUnknownError();
+						default:
+							if (errMessage.ToLower().Contains("pairing has been deactivated") || errMessage.ToLower().Contains("pairing has not been authorized"))
+							{
+								throw new PairingDeactivatedError();
+							} else
+							{
+								throw new RequestError(errMessage);
+							}
 					}
 				}
 			}
@@ -901,7 +841,7 @@ namespace Toopher
 		/// </summary>
 		public void RefreshFromServer()
 		{
-			string endpoint = string.Format("pairings/{0}", id);
+			string endpoint = "pairings/" + id;
 			var json = api.advanced.raw.get(endpoint);
 			Update(json);
 		}
@@ -915,13 +855,7 @@ namespace Toopher
 		{
 			string endpoint = string.Format("pairings/{0}/generate_reset_link", id);
 			NameValueCollection parameters = new NameValueCollection();
-			if (extras != null)
-			{
-				foreach (KeyValuePair<string, string> kvp in extras)
-				{
-					parameters.Add(kvp.Key, kvp.Value);
-				}
-			}
+			parameters = ToopherHelper.AddExtrasToCollection(parameters, extras);
 			var json = api.advanced.raw.post(endpoint, parameters);
 			return (string)json["url"];
 		}
@@ -936,13 +870,7 @@ namespace Toopher
 			string endpoint = string.Format("pairings/{0}/send_reset_link", id);
 			NameValueCollection parameters = new NameValueCollection();
 			parameters.Add("reset_email", email);
-			if (extras != null)
-			{
-				foreach (KeyValuePair<string, string> kvp in extras)
-				{
-					parameters.Add(kvp.Key, kvp.Value);
-				}
-			}
+			parameters = ToopherHelper.AddExtrasToCollection(parameters, extras);
 			api.advanced.raw.post(endpoint, parameters);
 		}
 
@@ -952,7 +880,7 @@ namespace Toopher
 		/// <returns>QR code image stored as a byte[].</returns>
 		public byte[] GetQrCodeImage()
 		{
-			string endpoint = string.Format("qr/pairings/{0}", id);
+			string endpoint = "qr/pairings/" + id;
 			var result = api.advanced.raw.get(endpoint);
 			return System.Text.Encoding.UTF8.GetBytes(result.ToString());
 		}
@@ -1052,7 +980,7 @@ namespace Toopher
 		/// </summary>
 		public void RefreshFromServer()
 		{
-			string endpoint = string.Format("authentication_requests/{0}",  id);
+			string endpoint = "authentication_requests/" + id;
 			var json = api.advanced.raw.get(endpoint);
 			Update(json);
 		}
@@ -1146,7 +1074,7 @@ namespace Toopher
 		/// </summary>
 		public void RefreshFromServer()
 		{
-			string endpoint = string.Format("users/{0}", id);
+			string endpoint = "users/" + id;
 			var json = api.advanced.raw.get(endpoint);
 			Update(json);
 		}
@@ -1173,7 +1101,7 @@ namespace Toopher
 		/// </summary>
 		public void EnableToopherAuthentication()
 		{
-			string endpoint = string.Format("users/{0}", id);
+			string endpoint = "users/" + id;
 			NameValueCollection parameters = new NameValueCollection();
 			parameters.Add("toopher_authentication_enabled", "true");
 			var json = api.advanced.raw.post(endpoint, parameters);
@@ -1187,7 +1115,7 @@ namespace Toopher
 		/// </summary>
 		public void DisableToopherAuthentication()
 		{
-			string endpoint = string.Format("users/{0}", id);
+			string endpoint = "users/" + id;
 			NameValueCollection parameters = new NameValueCollection();
 			parameters.Add("toopher_authentication_enabled", "false");
 			var json = api.advanced.raw.post(endpoint, parameters);
@@ -1264,7 +1192,7 @@ namespace Toopher
 		/// </summary>
 		public void RefreshFromServer()
 		{
-			string endpoint = string.Format("user_terminals/{0}", id);
+			string endpoint = "user_terminals/" + id;
 			var json = api.advanced.raw.get(endpoint);
 			Update(json);
 		}
@@ -1346,6 +1274,21 @@ namespace Toopher
 		}
 	}
 
+	public static class ToopherHelper
+	{
+		public static NameValueCollection AddExtrasToCollection(NameValueCollection parameters, Dictionary<string, string> extras = null)
+		{
+			if (extras != null)
+			{
+				foreach (KeyValuePair<string, string> kvp in extras)
+				{
+					parameters.Add(kvp.Key, kvp.Value);
+				}
+			}
+			return parameters;
+		}
+	}
+
 	// An exception class used to indicate an error in a request
 	public class RequestError : System.ApplicationException
 	{
@@ -1359,7 +1302,7 @@ namespace Toopher
 	/// </summary>
 	public class UserDisabledError : RequestError
 	{
-		static public int ERROR_CODE = 704;
+		public const int ERROR_CODE = 704;
 	}
 
 	/// <summary>
@@ -1369,7 +1312,7 @@ namespace Toopher
 	/// </summary>
 	public class UserUnknownError : RequestError
 	{
-		static public int ERROR_CODE = 705;
+		public const int ERROR_CODE = 705;
 	}
 
 	/// <summary>
@@ -1378,7 +1321,7 @@ namespace Toopher
 	/// </summary>
 	public class TerminalUnknownError : RequestError
 	{
-		static public int ERROR_CODE = 706;
+		public const int ERROR_CODE = 706;
 	}
 
 	/// <summary>
