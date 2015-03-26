@@ -63,3 +63,6 @@ $ xbuild
 $ mono ToopherDotNetDemo/bin/Debug/ToopherDotNetDemo.exe
 ```
 To avoid being prompted for your Toopher API key and secret, you can define them in the $TOOPHER_CONSUMER_KEY and $TOOPHER_CONSUMER_SECRET environment variables
+
+#### License
+ToopherDotNet is licensed under the MIT License. See LICENSE.txt for the full license text.
