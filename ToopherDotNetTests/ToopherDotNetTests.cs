@@ -439,6 +439,18 @@ namespace ToopherDotNetTests
 		}
 
 		[Test]
+		public void ProcessPostbackWithKeyWithEmptyValuesReturnsAuthenticationRequest()
+		{
+			ToopherIframe.SetDateOverride(TEST_DATE);
+			var api = GetToopherIframeApi();
+			var authData = GetAuthenticationRequestData();
+			authData.Set("requester_metadata", "");
+			authData.Set("toopher_sig", "2CQouLu8dL3OA8N/mgHK6eeYHm4=");
+			var authRequest = api.ProcessPostback(GetUrlencodedData(authData));
+			Assert.IsInstanceOf<AuthenticationRequest>(authRequest);
+		}
+
+		[Test]
 		public void ProcessPostbackWithBadSignatureThrowsError()
 		{
 			ToopherIframe.SetDateOverride(TEST_DATE);
